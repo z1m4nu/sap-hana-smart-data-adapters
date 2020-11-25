@@ -11,7 +11,6 @@ import org.crossroad.sdi.adapter.impl.ClassUtil;
 import org.crossroad.sdi.adapter.impl.RemoteSourceDescriptionFactory;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;
-import com.sap.hana.dp.adapter.sdk.CredentialProperties;
 import com.sap.hana.dp.adapter.sdk.PropertyEntry;
 import com.sap.hana.dp.adapter.sdk.PropertyGroup;
 import com.sap.hana.dp.adapter.sdk.RemoteSourceDescription;
