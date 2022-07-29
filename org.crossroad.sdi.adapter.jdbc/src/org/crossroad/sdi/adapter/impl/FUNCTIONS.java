@@ -1,8 +1,39 @@
 package org.crossroad.sdi.adapter.impl;
 
 public enum FUNCTIONS {
-	CONCAT, MAX, MIN, SUM, ADD, TO_DECIMAL, ROUND, TO_VARCHAR, TO_INT, TO_TINYINT, TO_INTEGER, TO_SMALLINT, TO_BIGINT, TO_REAL, TO_DOUBLE, MOD, CEIL, LN, LOG, ATAN2, STDDEV, AVG, COUNT, TO_TIMESTAMP;
-
+	// Aggregate
+	MAX, 
+	MIN, 
+	SUM, 
+	AVG, 
+	COUNT,
+	// Numeric
+	ADD,  
+	ROUND, 
+	MOD, 
+	CEIL, 
+	LN, 
+	LOG, 
+	ATAN2, 
+	STDDEV, 
+	// String
+	CONCAT,
+	TRIM,
+	LTRIM,
+	RTRIM,
+	UPPER,
+	LOWER,
+	// Conversion
+	TO_DECIMAL, 
+	TO_VARCHAR, 
+	TO_INT, 
+	TO_TINYINT, 
+	TO_INTEGER, 
+	TO_SMALLINT, 
+	TO_BIGINT, 
+	TO_REAL, 
+	TO_DOUBLE, 
+	TO_TIMESTAMP;
 	static FUNCTIONS fromString(String x) throws Exception {
 
 		for (FUNCTIONS currentType : FUNCTIONS.values()) {

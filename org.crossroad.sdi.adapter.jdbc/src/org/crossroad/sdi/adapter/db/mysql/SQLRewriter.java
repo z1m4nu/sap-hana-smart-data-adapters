@@ -11,7 +11,7 @@ import org.crossroad.sdi.adapter.db.AbstractSQLRewriter;
  * @author e.soden
  *
  */
-public class SQLRewriter extends AbstractSQLRewriter{
+public class SQLRewriter extends AbstractSQLRewriter {
 	private Logger logger = LogManager.getLogger(SQLRewriter.class);
 
 

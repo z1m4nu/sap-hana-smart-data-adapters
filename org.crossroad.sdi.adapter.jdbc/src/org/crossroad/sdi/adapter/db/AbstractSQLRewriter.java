@@ -522,9 +522,9 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		int size = expr.getOperands().size();
 
 		buffer.append(expressionBuilder(expr.getOperands().get(0)));
-		if (Type.IN.equals(expr.getType())) {
+		if (Type.IS_NULL.equals(expr.getType())) {
 			buffer.append(" IS NULL ");
-		} else if (Type.NOT_IN.equals(expr.getType())) {
+		} else if (Type.IS_NOT_NULL.equals(expr.getType())) {
 			buffer.append(" IS NOT NULL ");
 		} else {
 			throw new AdapterException("Expression type [" + expr.getType().name()
@@ -773,6 +773,11 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			buffer.append(_v);
 			buffer.append("");
 			break;
+		case DATE_LITERAL:
+			buffer.append("DATE ");
+			buffer.append(_v);
+			buffer.append("");
+			break;
 		default:
 			throw new AdapterException("Expression type [" + expr.getType().name() + "] is not supported.");
 		}
@@ -986,12 +991,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 					buffer.append(")");
 				}
 				break;
-			case SUM:
-			case COUNT:
-			case MIN:
-			case MAX:
-				buffer.append(printFxColumns(expr));
-				break;
 			case TO_REAL:
 			case TO_INT:
 			case TO_INTEGER:
@@ -1008,23 +1007,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			case MOD:
 				buffer.append("(").append(expressionBuilder(expr.getOperands().get(0))).append(" % ")
 						.append(expressionBuilder(expr.getOperands().get(1))).append(")");
-				break;
-			case CEIL:
-				buffer.append("CEILING(");
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				buffer.append(")");
-				break;
-			case LN:
-				buffer.append("LOG(");
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				buffer.append(")");
-				break;
-			case LOG:
-				buffer.append("LOG(");
-				buffer.append(expressionBuilder(expr.getOperands().get(1)));
-				buffer.append(", ");
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				buffer.append(")");
 				break;
 			case ATAN2:
 			case STDDEV:
@@ -1068,6 +1050,20 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 				break;
 			case CONCAT:
 				buffer.append(expressionCONCAT(expr));
+				break;
+			case SUM:
+			case COUNT:
+			case MIN:
+			case MAX:
+			case LN:
+			case LOG:
+			case CEIL:
+			case TRIM:
+			case LTRIM:
+			case RTRIM:
+			case UPPER:
+			case LOWER:
+				buffer.append(printFxColumns(expr));
 				break;
 			default:
 				throw new AdapterException("Function [" + expr.getValue() + "] is not supported.");

@@ -20,6 +20,9 @@ import com.sap.hana.dp.adapter.sdk.RemoteSourceDescription;
  */
 public class JDBCAdapter extends AbstractJDBCAdapter {
 
+	public JDBCAdapter() {
+		super();
+	}
 	@Override
 	protected void populateCFGDriverList(PropertyEntry drvList) throws AdapterException {
 

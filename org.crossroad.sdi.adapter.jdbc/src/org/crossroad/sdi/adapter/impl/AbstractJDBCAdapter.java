@@ -27,7 +27,6 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +36,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.crossroad.sdi.adapter.db.IDBInfo;
+import org.osgi.framework.Bundle;
 
 import com.sap.hana.dp.adapter.sdk.Adapter;
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.AdapterCapability;
@@ -132,6 +132,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	@Override
 	public void open(RemoteSourceDescription connectionInfo, boolean isCDC) throws AdapterException {
 
+		
 		
 		this.isCDC = isCDC;
 

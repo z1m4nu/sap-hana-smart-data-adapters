@@ -25,7 +25,7 @@ public class Activator  implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
-		JDBCFactory srv = new JDBCFactory();
+		JDBCFactory srv = new JDBCFactory(bundleContext);
 		adapterRegistration = context.registerService(AdapterFactory.class.getName(),srv ,null);
 	}
 

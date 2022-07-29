@@ -3,22 +3,31 @@
  */
 package org.crossroad.sdi.adapter.jdbc;
 
+import org.crossroad.sdi.adapter.impl.AbstractJDBCAdapterFactory;
+import org.crossroad.sdi.adapter.impl.RequiredComponents;
+import org.osgi.framework.BundleContext;
+
 import com.sap.hana.dp.adapter.sdk.Adapter;
 import com.sap.hana.dp.adapter.sdk.AdapterException;
-import com.sap.hana.dp.adapter.sdk.AdapterFactory;
 import com.sap.hana.dp.adapter.sdk.RemoteSourceDescription;
 
-public class JDBCFactory implements AdapterFactory{
+public class JDBCFactory extends AbstractJDBCAdapterFactory {
 
-	private static final String NAME = "DEBUGJDBC";//"Generic JDBC";
-	@Override
-	public Adapter createAdapterInstance() {
-		return new JDBCAdapter();
+	private static final String NAME = "DEBUGJDBC";// "Generic JDBC";
+
+	public JDBCFactory(BundleContext context) {
+		super(context);
 	}
 
 	@Override
-	public String getAdapterType() {
-		return NAME;
+	public RemoteSourceDescription getAdapterConfig() throws AdapterException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getAdapterDescription() {
+		return "DP JDBC Adapter";
 	}
 
 	@Override
@@ -26,30 +35,29 @@ public class JDBCFactory implements AdapterFactory{
 		return NAME;
 	}
 
-
 	@Override
-	public String getAdapterDescription() {
-		return "Basic JDBC connection no optimisation";
+	public String getAdapterType() {
+		return "JDBC Generic adapter";
 	}
 
 	@Override
-	public RemoteSourceDescription getAdapterConfig() {
+	public RemoteSourceDescription upgrade(RemoteSourceDescription arg0) throws AdapterException {
 		return null;
 	}
 
 	@Override
-	public boolean validateAdapterConfig(RemoteSourceDescription propertyGroup)
-			throws AdapterException {
-		return true;
+	public boolean validateAdapterConfig(RemoteSourceDescription arg0) throws AdapterException {
+		return false;
 	}
 
 	@Override
-	public RemoteSourceDescription upgrade(RemoteSourceDescription propertyGroup)
-			throws AdapterException {
-		// TODO Auto-generated method stub
-		return null;
+	public RequiredComponents getRequiredComponents() {
+		 return null;
 	}
 
-
+	@Override
+	protected Adapter doCreateAdapterInstance() {
+		return (Adapter) new JDBCAdapter();
+	}
 
 }
