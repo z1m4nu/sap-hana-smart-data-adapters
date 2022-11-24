@@ -18,11 +18,11 @@ import com.sap.hana.dp.adapter.sdk.parser.TableReference;
  * @author e.soden
  *
  */
-public class SQLRewriter extends AbstractSQLRewriter {
-	private Logger logger = LogManager.getLogger(SQLRewriter.class);
+public class MSSQLRewriter extends AbstractSQLRewriter {
+	private Logger logger = LogManager.getLogger(MSSQLRewriter.class);
 
 
-	public SQLRewriter() {
+	public MSSQLRewriter() {
 		super();
 		setLimitAtEnd(false);
 	}
@@ -30,7 +30,7 @@ public class SQLRewriter extends AbstractSQLRewriter {
 
 	@Override
 	protected String expressionCONCAT(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		boolean _first = true;
@@ -49,7 +49,7 @@ public class SQLRewriter extends AbstractSQLRewriter {
 
 	@Override
 	protected String printDT(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 
 		buffer.setLength(0);
 
@@ -74,11 +74,10 @@ public class SQLRewriter extends AbstractSQLRewriter {
 
     @Override
 	protected String tableNameBuilder(TableReference tabRef) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		String tabName = tabRef.getName();
 		if (tabName.contains(".")) {
-			buffer.append(MSSQLAdapterUtil.SQLTableBuilder(UniqueNameTools.build(tabName)));
-			// buffer.append(UniqueNameTools.build(tabName).getUniqueName());
+			buffer.append(String.format("[%s]", UniqueNameTools.build(tabName).getUniqueName().replace(".", "].[")));
 		} else if (tabRef.getDatabase() != null) {
 			buffer.append("[");
 			buffer.append(tabRef.getDatabase());
@@ -89,7 +88,7 @@ public class SQLRewriter extends AbstractSQLRewriter {
 
 	@Override
 	protected String columnNameBuilder(ColumnReference colRef) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		
 		if (colRef.getTableName() != null) {
 			buffer.append(aliasRewriter(colRef.getTableName()) + ".");

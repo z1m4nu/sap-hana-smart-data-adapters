@@ -78,28 +78,6 @@ public class MSSQLAdapterUtil {
     	return buffer.toString();
     }
     
-    public static String SQLTableBuilder(UniqueNameTools tools)
-    {
-    	StringBuffer buffer = new StringBuffer();
-    	
-    	buffer.append("[");
-    	buffer.append(tools.getCatalog());
-    	buffer.append("]");
-    	
-    	if(tools.getSchema() != null)
-    	{
-        	buffer.append(".[");
-        	buffer.append(tools.getSchema());
-        	buffer.append("]");
-    	}
-    	
-    	if (tools.getTable() != null) {
-        	buffer.append(".[");
-        	buffer.append(tools.getTable());
-        	buffer.append("]");
-		}
-    	return buffer.toString();
-    }
     
     public static void main(String[] args) {
 		try {

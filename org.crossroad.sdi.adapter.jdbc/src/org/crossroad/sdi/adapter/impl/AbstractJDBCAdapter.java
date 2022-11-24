@@ -279,6 +279,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 					customMapping = mappingEntry.getValue();
 				}
 				
+				
 				columnBuilder.loadMapping(info.getMappingFile(), customMapping);
 				
 				sqlRewriter = (ISQLRewriter)Class.forName(info.getRewriterClass()).newInstance();//info.getRewriter();
@@ -435,7 +436,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			}
 
 		} catch (SQLException e) {
-			throw new AdapterException(e.getMessage());
+			throw new AdapterException(e);
 		}
 	}
 
@@ -465,7 +466,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 				return 0;
 			}
 		} catch (IOException e) {
-			throw new AdapterException(e.getLocalizedMessage());
+			throw new AdapterException(e);
 		}
 
 	}
@@ -681,7 +682,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			}
 			return nodes;
 		} catch (SQLException e) {
-			throw new AdapterException(e.getMessage());
+			throw new AdapterException(e);
 		}
 	}
 
@@ -698,13 +699,15 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 
 		switch (column.getDataType()) {
 		case TINYINT:
-			row.setColumnValue(colIndex, rs.getDouble(colIndex + 1));
-			break;
+		case SMALLINT:
 		case INTEGER:
 			row.setColumnValue(colIndex, rs.getInt(colIndex + 1));
 			break;
 		case BIGINT:
 			row.setColumnValue(colIndex, rs.getLong(colIndex + 1));
+			break;
+		case BOOLEAN:
+			row.setColumnValue(colIndex, rs.getBoolean(colIndex + 1));
 			break;
 		case DOUBLE:
 			row.setColumnValue(colIndex, rs.getDouble(colIndex + 1));
@@ -784,7 +787,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			row.setColumnValue(colIndex, str);
 			break;
 		default:
-			logger.debug("Unknown Type " + column.getDataType() + " for column "
+			logger.error("Unknown Type " + column.getDataType() + " for column "
 					+ rs.getMetaData().getColumnName(colIndex + 1));
 			str = rs.getString(colIndex + 1);
 			if (str == null) {

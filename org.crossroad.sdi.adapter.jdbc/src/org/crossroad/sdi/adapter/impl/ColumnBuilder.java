@@ -81,7 +81,9 @@ public class ColumnBuilder {
 		column.setNativeLength(length);
 
 		jdbcTypeName = jdbcTypeName.toUpperCase().replace(" ", "");
-
+		
+		
+		
 		column.setDataType(DataType.valueOf(mappingTable.getProperty(jdbcTypeName, DataType.INVALID.name())));
 
 		logger.debug("Name [" + name + "] JDBC Type [" + jdbcType + "] JDBC Name [" + jdbcTypeName + "] HANA Type ["

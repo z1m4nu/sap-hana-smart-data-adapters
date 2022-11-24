@@ -11,11 +11,11 @@ import org.crossroad.sdi.adapter.db.AbstractSQLRewriter;
  * @author e.soden
  *
  */
-public class SQLRewriter extends AbstractSQLRewriter {
-	private Logger logger = LogManager.getLogger(SQLRewriter.class);
+public class MYSQLRewriter extends AbstractSQLRewriter {
+	private Logger logger = LogManager.getLogger(MYSQLRewriter.class);
 
 
-	public SQLRewriter() {
+	public MYSQLRewriter() {
 	}
 	
 

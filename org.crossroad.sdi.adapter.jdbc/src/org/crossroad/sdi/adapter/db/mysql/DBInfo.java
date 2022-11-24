@@ -30,7 +30,7 @@ public class DBInfo implements IDBInfo {
 
 	@Override
 	public String getRewriterClass() {
-		return SQLRewriter.class.getCanonicalName();
+		return MYSQLRewriter.class.getCanonicalName();
 	}
 
 

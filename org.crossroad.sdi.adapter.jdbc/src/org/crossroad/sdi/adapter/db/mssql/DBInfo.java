@@ -11,12 +11,6 @@ import org.crossroad.sdi.adapter.db.IDBInfo;
  */
 public class DBInfo implements IDBInfo {
 
-	/**
-	 * 
-	 */
-	public DBInfo() {
-		
-	}
 
 	@Override
 	public String getDisplayName() {
@@ -30,7 +24,7 @@ public class DBInfo implements IDBInfo {
 
 	@Override
 	public String getRewriterClass() {
-		return SQLRewriter.class.getCanonicalName();
+		return MSSQLRewriter.class.getCanonicalName();
 	}
 
 }

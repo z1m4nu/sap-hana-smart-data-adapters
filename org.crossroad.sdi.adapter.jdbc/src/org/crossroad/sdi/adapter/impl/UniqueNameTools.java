@@ -3,6 +3,8 @@
  */
 package org.crossroad.sdi.adapter.impl;
 
+import org.crossroad.sdi.adapter.utils.StringUtils;
+
 /**
  * @author e.soden
  *
@@ -14,7 +16,6 @@ public class UniqueNameTools {
 	private String table = null;
 
 	protected UniqueNameTools() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -41,17 +42,17 @@ public class UniqueNameTools {
 	public static UniqueNameTools build(String uniqueName) {
 		UniqueNameTools cls = new UniqueNameTools();
 		if (uniqueName != null) {
-			uniqueName = uniqueName.replaceAll("\"","");
-			
+			uniqueName = uniqueName.replace("\"", "").replace("<none>.", "").replace(".<none>", "");
+
 			String split[] = uniqueName.split("\\.");
 
 			switch (split.length) {
 			case 1:
-				cls.catalog = split[0];
+				cls.table = split[0];
 				break;
 			case 2:
-				cls.catalog = split[0];
-				cls.schema = split[1];
+				cls.schema = split[0];
+				cls.table = split[1];
 				break;
 			case 3:
 				cls.catalog = split[0];
@@ -67,17 +68,23 @@ public class UniqueNameTools {
 	}
 
 	public String getUniqueName() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 
-		buffer.append(catalog);
+		if (StringUtils.hasText(catalog)) {
+			buffer.append(catalog);
+		}
 
-		if (schema != null) {
-			buffer.append(".");
+		if (StringUtils.hasText(schema)) {
+			if (buffer.length() > 0) {
+				buffer.append(".");
+			}
 			buffer.append(this.schema);
 		}
 
-		if (table != null) {
-			buffer.append(".");
+		if (StringUtils.hasText(table)) {
+			if (buffer.length() > 0) {
+				buffer.append(".");
+			}
 			buffer.append(this.table);
 		}
 

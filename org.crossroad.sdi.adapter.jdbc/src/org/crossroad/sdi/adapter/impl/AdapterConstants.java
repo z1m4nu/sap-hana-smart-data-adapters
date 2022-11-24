@@ -3,7 +3,7 @@
  */
 package org.crossroad.sdi.adapter.impl;
 
-import org.crossroad.sdi.adapter.db.jdbc.SQLRewriter;
+import org.crossroad.sdi.adapter.db.jdbc.JDBCSQLRewriter;
 
 /**
  * @author e.soden
@@ -34,7 +34,7 @@ public final class AdapterConstants {
 	public static final String KEY_DATAMAPPING_FILE_DEFAULT = "mapping.properties";
 	
 	public static final String KEY_JDBC_TYPE = "jdbc.db.type";
-	public static final String KEY_JDBC_TYPE_DEFAULT = SQLRewriter.class.getCanonicalName();
+	public static final String KEY_JDBC_TYPE_DEFAULT = JDBCSQLRewriter.class.getCanonicalName();
 	
 	
 	public static final String PRP_SCHEMA = "schema";

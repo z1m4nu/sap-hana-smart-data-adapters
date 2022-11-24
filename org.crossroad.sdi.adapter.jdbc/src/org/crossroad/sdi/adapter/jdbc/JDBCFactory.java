@@ -13,7 +13,7 @@ import com.sap.hana.dp.adapter.sdk.RemoteSourceDescription;
 
 public class JDBCFactory extends AbstractJDBCAdapterFactory {
 
-	private static final String NAME = "DEBUGJDBC";// "Generic JDBC";
+	private static final String NAME = "JDBC Generic Adapter";// "Generic JDBC";
 
 	public JDBCFactory(BundleContext context) {
 		super(context);

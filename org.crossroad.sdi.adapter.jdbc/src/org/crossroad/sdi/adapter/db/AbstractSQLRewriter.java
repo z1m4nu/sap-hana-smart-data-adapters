@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import org.crossroad.sdi.adapter.impl.FUNCTIONS;
 import org.crossroad.sdi.adapter.impl.ISQLRewriter;
 import org.crossroad.sdi.adapter.impl.UniqueNameTools;
+import org.crossroad.sdi.adapter.utils.StringUtils;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.parser.ColumnReference;
@@ -41,13 +42,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	private ExpressionBase.Type queryType = ExpressionBase.Type.QUERY;
 	private final Map<String, String> schemaAliasReplacements = new HashMap<String, String>();
 	private boolean limitAtEnd = true;
-
-	/**
-	 * 
-	 */
-	public AbstractSQLRewriter() {
-		// TODO Auto-generated constructor stub
-	}
 
 	public void setLimitAtEnd(boolean limitAtEnd) {
 		this.limitAtEnd = limitAtEnd;
@@ -79,7 +73,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String printFxColumns(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 		boolean first = true;
 
@@ -108,7 +102,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String clauseBuilder(String keyword, List<ExpressionBase> eprx) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append(keyword);
@@ -125,7 +119,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String fromClauseBuilder(ExpressionBase eprx) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 		buffer.append(" FROM ");
 		buffer.append(expressionBuilder(eprx));
@@ -162,7 +156,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 */
 	protected String orderClauseBuilder(List<Order> order) throws AdapterException {
 		boolean first = true;
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		str.append(" ORDER BY ");
 
 		for (Order o : order) {
@@ -190,7 +184,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 */
 	protected String whereClauseBuilder(List<ExpressionBase> where) throws AdapterException {
 		boolean first = true;
-		StringBuffer str = new StringBuffer(" WHERE ");
+		StringBuilder str = new StringBuilder(" WHERE ");
 
 		for (ExpressionBase exp : where) {
 			if (!first) {
@@ -213,7 +207,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	protected String setClauseBuilder(List<ExpressionBase> setclause) throws AdapterException {
 		boolean first = true;
 
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		for (ExpressionBase exp : setclause) {
 			if (!first) {
 				str.append(", ");
@@ -234,7 +228,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String assignClauseBuilder(ExpressionBase exp) throws AdapterException {
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		ColumnReference col = (ColumnReference) exp;
 		str.append(columnNameBuilder(col));
 		str.append(" = ");
@@ -250,7 +244,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 */
 	protected String expressionBaseListBuilder(List<ExpressionBase> proj) throws AdapterException {
 		boolean first = true;
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		for (ExpressionBase exp : proj) {
 			if (first) {
 				first = false;
@@ -269,7 +263,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionBETWEENBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		if (Type.BETWEEN.equals(expr.getType())) {
@@ -303,7 +297,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionLIKEBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append(expressionBuilder(expr.getOperands().get(0)));
@@ -328,7 +322,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionCONCAT(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append("CONCAT (");
@@ -352,7 +346,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionINBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append(expressionBuilder(expr.getOperands().get(0)));
@@ -379,7 +373,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionList(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		boolean first = true;
 
 		if (expr.getOperands() == null || expr.getOperands().isEmpty()) {
@@ -405,7 +399,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionOR(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 		boolean first = true;
 
@@ -434,7 +428,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionDISTINCTBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append("DISTINCT ");
@@ -453,7 +447,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionSubQuery(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append("(");
@@ -470,7 +464,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionSubQuery(Query query) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append("(");
@@ -487,7 +481,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionUNIONBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append(expressionBuilder(expr.getOperands().get(0)));
@@ -516,7 +510,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionNULLOperand(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		int size = expr.getOperands().size();
@@ -544,7 +538,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionJoinBuilder(Join join) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append("(");
@@ -575,7 +569,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String twoMembersBuilder(Expression expr) throws AdapterException {
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		try {
 			str.append(expressionBuilder((ExpressionBase) expr.getOperands().get(0)));
 			str.append(" " + expr.getValue() + " ");
@@ -599,7 +593,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		if (query.getType() == ExpressionBase.Type.UPDATE) {
 			return regenerateUpdateSQL((Query) query);
 		}
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		Expression exp = (Expression) query;
 		str.append(expressionBuilder((ExpressionBase) exp.getOperands().get(0)));
 		str.append(" ");
@@ -610,7 +604,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String regenerateInsertSQL(Query query) throws AdapterException {
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 
 		sql.append("INSERT INTO ");
 		sql.append(expressionBuilder(query.getFromClause()));
@@ -632,7 +626,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String regenerateDeleteSQL(Query query) throws AdapterException {
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 		sql.append("DELETE FROM ");
 		sql.append(expressionBuilder(query.getFromClause()));
 		if (query.getWhereClause() != null) {
@@ -643,7 +637,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String regenerateUpdateSQL(Query query) throws AdapterException {
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE ");
 		sql.append(expressionBuilder(query.getFromClause()));
 		sql.append(" SET ");
@@ -656,7 +650,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String regenerateSQL(Query query) throws AdapterException {
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 
 		sql.append("SELECT ");
 
@@ -715,7 +709,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 				setQueryType(query.getType());
 				String sqlRewrite = regenerateSQL(query);
 
-				return sqlRewrite;
+				return StringUtils.hasText(sqlRewrite) ? sqlRewrite.trim() : null;
 			}
 			for (ExpressionParserMessage e : messageList) {
 				this.logger.error(e.getText());
@@ -761,7 +755,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	protected String printDT(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 
 		buffer.setLength(0);
 
@@ -792,11 +786,11 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String tableNameBuilder(TableReference tabRef) throws AdapterException {
-		return UniqueNameTools.build(tabRef.getName()).getTable();
+		return UniqueNameTools.build(tabRef.getName()).getUniqueName();
 	}
 
 	protected String columnNameBuilder(ColumnReference colRef) {
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		if (colRef.getTableName() != null) {
 			str.append(aliasRewriter(colRef.getTableName()) + ".");
 		}
@@ -812,7 +806,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 
 	protected String expressionBuilder(ExpressionBase val) throws AdapterException {
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 
 		switch (val.getType()) {
 		case ALL:
@@ -926,7 +920,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	
 
 	private String expressionCASE(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 
 		buffer.append(" CASE ");
@@ -962,7 +956,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 * @throws AdapterException
 	 */
 	protected String expressionSQLFunctionsBuilder(Expression expr) throws AdapterException {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		// buffer.setLength(0);
 		FUNCTIONS fx = FUNCTIONS.valueOf(expr.getValue());
 		try {
@@ -1033,11 +1027,14 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 					}
 					buffer.append(expressionBuilder(param));
 				}
+				/*
 				if (expr.getValue().equals("AVG")) {
 					buffer.append(" * 1.0 )");
 				} else {
 					buffer.append(")");
 				}
+				*/
+				buffer.append(")");
 				break;
 			case TO_VARCHAR:
 				buffer.append(expressionBuilder(expr.getOperands().get(0)));
