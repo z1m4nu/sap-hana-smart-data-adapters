@@ -1,4 +1,4 @@
-package org.crossroad.sdi.adapter.db.pgsql;
+package org.crossroad.sdi.adapter.db.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,5 +74,64 @@ public class SQLRewriterTest {
 			fail(e);
 		}
 	}
+	@Test
+	public void rewriter2() {
+
+			rewriter( "select\r\n"
+					+ "		\"timeslot\".\"date\" as \"V1\",\r\n"
+					+ "		\"timeslot\".\"workplan_id\" as \"V2\",\r\n"
+					+ "		\"timeslot_status_type\".\"value\" as \"V3\"\r\n"
+					+ "	from\r\n"
+					+ "		(\"cmdb_rp.timeslot\" \"timeslot\"\r\n"
+					+ "	left outer join \"cmdb_rp.timeslot_status_type\" \"timeslot_status_type\" on\r\n"
+					+ "		(\"timeslot\".\"status_type\" = \"timeslot_status_type\".\"id\") )");
+			
+	}
 	
+	@Test
+	public void rewrite3() {
+		rewriter("select\r\n"
+				+ "	\"store_workplan\".\"week_id\",\r\n"
+				+ "	\"timeslot_status_type4\".\"V3\"\r\n"
+				+ "from\r\n"
+				+ "	( (\r\n"
+				+ "	select\r\n"
+				+ "		\"timeslot\".\"date\" as \"V1\",\r\n"
+				+ "		\"timeslot\".\"workplan_id\" as \"V2\",\r\n"
+				+ "		\"timeslot_status_type\".\"value\" as \"V3\"\r\n"
+				+ "	from\r\n"
+				+ "		(\"cmdb_rp.timeslot\" \"timeslot\"\r\n"
+				+ "	left outer join \"cmdb_rp.timeslot_status_type\" \"timeslot_status_type\" on\r\n"
+				+ "		(\"timeslot\".\"status_type\" = \"timeslot_status_type\".\"id\") ) ) \"timeslot_status_type4\"\r\n"
+				+ "left outer join \"cmdb_rp.store_workplan\" \"store_workplan\" on\r\n"
+				+ "	(\"timeslot_status_type4\".\"V2\" = \"store_workplan\".\"workplan_id\"\r\n"
+				+ "		and TO_DATE(TO_NVARCHAR(\"timeslot_status_type4\".\"V1\")) = \"store_workplan\".\"date\") )");
+	}
+	private void rewriter (String input) {
+		try {
+			JDBCSQLRewriter rewriter = new JDBCSQLRewriter();
+			
+			String sql = rewriter.rewriteSQL(input);
+			
+			System.out.println(String.format("INPUT [%s]", input));
+			System.out.println(String.format("OUTPUT [%s]", sql));
+			
+		} catch(Exception e)
+		{
+			fail(e);
+		}
+	}
+	
+	
+	@Test
+	public void rewriter22() {
+		try {
+			
+			rewriter("SELECT \"store_workplan\".\"week_id\", \"timeslot_status_type4\".\"V3\" FROM ( (SELECT \"timeslot\".\"date\" AS \"V1\", \"timeslot\".\"workplan_id\" AS \"V2\", \"timeslot_status_type\".\"value\" AS \"V3\" FROM (\"cmdb_rp.timeslot\" \"timeslot\"  LEFT OUTER JOIN \"cmdb_rp.timeslot_status_type\" \"timeslot_status_type\"  ON (\"timeslot\".\"status_type\" = \"timeslot_status_type\".\"id\") ) )  \"timeslot_status_type4\"  LEFT OUTER JOIN \"cmdb_rp.store_workplan\" \"store_workplan\"  ON (\"timeslot_status_type4\".\"V2\" = \"store_workplan\".\"workplan_id\" AND TO_DATE(TO_NVARCHAR(\"timeslot_status_type4\".\"V1\")) = \"store_workplan\".\"date\") ) GROUP BY \"store_workplan\".\"week_id\",\"timeslot_status_type4\".\"V3\" ORDER BY \"timeslot_status_type4\".\"V3\" ASC, \"store_workplan\".\"week_id\" ASC LIMIT 200 ");
+			
+		} catch(Exception e)
+		{
+			fail(e);
+		}
+	}
 }

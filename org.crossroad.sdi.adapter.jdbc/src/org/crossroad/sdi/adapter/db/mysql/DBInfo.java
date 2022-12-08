@@ -4,6 +4,7 @@
 package org.crossroad.sdi.adapter.db.mysql;
 
 import org.crossroad.sdi.adapter.db.IDBInfo;
+import org.crossroad.sdi.adapter.db.jdbc.JDBCSQLRewriter;
 
 /**
  * @author e.soden
@@ -15,7 +16,6 @@ public class DBInfo implements IDBInfo {
 	 * 
 	 */
 	public DBInfo() {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class DBInfo implements IDBInfo {
 
 	@Override
 	public String getRewriterClass() {
-		return MYSQLRewriter.class.getCanonicalName();
+		return JDBCSQLRewriter.class.getCanonicalName();
 	}
 
 

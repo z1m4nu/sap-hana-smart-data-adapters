@@ -35,8 +35,6 @@ import com.sap.hana.dp.adapter.sdk.parser.TableReference;
  */
 public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	private Logger logger = LogManager.getLogger(AbstractSQLRewriter.class);
-	
-	
 
 	private char aliasSeed = 'A';
 
@@ -399,7 +397,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		return buffer.toString();
 	}
-	
+
 	/**
 	 * 
 	 * @param expr
@@ -420,7 +418,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	protected String expressionOR(Expression expr) throws AdapterException {
 		return ORANDExpression(true, expr);
 	}
-	
+
 	protected String ORANDExpression(boolean isOr, Expression expr) throws AdapterException {
 		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
@@ -727,7 +725,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	public String rewriteSQL(String sql) throws AdapterException {
-		List<ExpressionParserMessage> messageList = new ArrayList<ExpressionParserMessage>();
+		List<ExpressionParserMessage> messageList = new ArrayList<>();
 		try {
 			ExpressionBase query = ExpressionParserUtil.buildQuery(sql, messageList);
 			if (query != null) {
@@ -752,7 +750,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		String newAlias = (String) this.aliasMap.get(alias);
 		if (newAlias == null) {
-			newAlias = String.valueOf(this.aliasSeed++);
+			newAlias = alias.replace("\"", "");//String.valueOf(this.aliasSeed++);
 			this.aliasMap.put(alias, newAlias);
 		}
 		return newAlias;
@@ -816,7 +814,8 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	protected String columnNameBuilder(ColumnReference colRef) {
 		StringBuilder str = new StringBuilder();
-		if (colRef.getTableName() != null) {
+
+		if (StringUtils.hasText(colRef.getTableName())) {
 			str.append(aliasRewriter(colRef.getTableName()) + ".");
 		}
 
@@ -826,6 +825,10 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			str.append(colRef.getColumnName().replaceAll("\"", ""));
 		}
 
+		/*
+		 * 
+		 */
+		
 		return str.toString();
 	}
 
@@ -840,8 +843,8 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			str.append(columnNameBuilder((ColumnReference) val));
 			break;
 		case AND:
-			str.append(expressionAND((Expression)val));
-			
+			str.append(expressionAND((Expression) val));
+
 //			if (val instanceof TableReference) {
 //				str.append(tableNameBuilder((TableReference) val));
 //			} else {
@@ -908,7 +911,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			break;
 		case SELECT:
 		case QUERY:
-			str.append(expressionSubQuery(((Expression) val)));
+			str.append(expressionSubQuery(((Query) val)));
 			break;
 		case DISTINCT:
 			expressionDISTINCTBuilder((Expression) val);
@@ -941,10 +944,12 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		default:
 			throw new AdapterException("Unknown value [" + ((Expression) val).getValue() + "]");
 		}
-		if (val.getAlias() != null) {
+		
+		if (StringUtils.hasText(val.getAlias())) {
 			str.append(" ");
-			str.append(aliasRewriter(val.getAlias()));
+			str.append(aliasRewriter(val.getAlias().replace("\"", "")));
 		}
+		
 		return str.toString();
 	}
 
