@@ -5,6 +5,7 @@ package org.crossroad.sdi.adapter.db;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,8 @@ import com.sap.hana.dp.adapter.sdk.parser.TableReference;
  */
 public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	private Logger logger = LogManager.getLogger(AbstractSQLRewriter.class);
+	
+	
 
 	private char aliasSeed = 'A';
 
@@ -258,6 +261,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build BETWEEN statement
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -292,6 +296,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build LIKE statement
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -317,6 +322,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build CONCAT statement
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -341,6 +347,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build IN clause
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -368,6 +375,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Create a list of item
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -391,14 +399,29 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		return buffer.toString();
 	}
+	
+	/**
+	 * 
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
+	protected String expressionAND(Expression expr) throws AdapterException {
+		return ORANDExpression(false, expr);
+	}
 
 	/**
 	 * Create OR expression
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
 	 */
 	protected String expressionOR(Expression expr) throws AdapterException {
+		return ORANDExpression(true, expr);
+	}
+	
+	protected String ORANDExpression(boolean isOr, Expression expr) throws AdapterException {
 		StringBuilder buffer = new StringBuilder();
 		buffer.setLength(0);
 		boolean first = true;
@@ -408,7 +431,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 				if (first) {
 					first = false;
 				} else {
-					buffer.append(" OR ");
+					buffer.append((isOr) ? " OR " : " AND ");
 				}
 
 				buffer.append(expressionBuilder(b));
@@ -423,6 +446,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build DISTINCT syntax
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -442,6 +466,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Apply subquery
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -459,6 +484,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Appls subquery
+	 * 
 	 * @param query
 	 * @return
 	 * @throws AdapterException
@@ -680,9 +706,8 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		if (query.getOrderBy() != null) {
 			sql.append(orderClauseBuilder(query.getOrderBy()));
 		}
-		
-		if (this.limitAtEnd)
-		{
+
+		if (this.limitAtEnd) {
 			try {
 				Method method = query.getClass().getMethod("getLimit", null);
 
@@ -794,16 +819,15 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		if (colRef.getTableName() != null) {
 			str.append(aliasRewriter(colRef.getTableName()) + ".");
 		}
-		
+
 		if ("*".equalsIgnoreCase(colRef.getColumnName())) {
 			str.append("*");
 		} else {
 			str.append(colRef.getColumnName().replaceAll("\"", ""));
 		}
-		
+
 		return str.toString();
 	}
-
 
 	protected String expressionBuilder(ExpressionBase val) throws AdapterException {
 		StringBuilder str = new StringBuilder();
@@ -816,7 +840,13 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			str.append(columnNameBuilder((ColumnReference) val));
 			break;
 		case AND:
-			str.append(tableNameBuilder((TableReference) val));
+			str.append(expressionAND((Expression)val));
+			
+//			if (val instanceof TableReference) {
+//				str.append(tableNameBuilder((TableReference) val));
+//			} else {
+//				str.append(expressionAND((Expression)val));
+//			}
 			break;
 		case TABLE:
 			str.append(tableNameBuilder((TableReference) val));
@@ -898,7 +928,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		case ORDER_BY:
 		case VARIABLE:
 		case ASSIGN:
-		
+
 		case PARAMETER:
 		case UNKNOWN:
 		case UPDATE:
@@ -917,7 +947,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		return str.toString();
 	}
-	
 
 	private String expressionCASE(Expression expr) throws AdapterException {
 		StringBuilder buffer = new StringBuilder();
@@ -928,7 +957,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		for (ExpressionBase base : expr.getOperands()) {
 			switch (base.getType()) {
 			case CASE_CLAUSES:
-				for (ExpressionBase elem : ((Expression)base).getOperands()) {
+				for (ExpressionBase elem : ((Expression) base).getOperands()) {
 					buffer.append(" WHEN ");
 					buffer.append(expressionBuilder(((Expression) elem).getOperands().get(0)));
 					buffer.append(" THEN ");
@@ -951,6 +980,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	/**
 	 * Build function expression
+	 * 
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -992,6 +1022,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			case TO_TINYINT:
 			case TO_BIGINT:
 			case TO_TIMESTAMP:
+			case TO_DATE:
 				buffer.append("CAST(");
 				buffer.append(expressionBuilder(expr.getOperands().get(0)));
 				buffer.append(" AS ");
@@ -1028,15 +1059,13 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 					buffer.append(expressionBuilder(param));
 				}
 				/*
-				if (expr.getValue().equals("AVG")) {
-					buffer.append(" * 1.0 )");
-				} else {
-					buffer.append(")");
-				}
-				*/
+				 * if (expr.getValue().equals("AVG")) { buffer.append(" * 1.0 )"); } else {
+				 * buffer.append(")"); }
+				 */
 				buffer.append(")");
 				break;
 			case TO_VARCHAR:
+			case TO_NVARCHAR:
 				buffer.append(expressionBuilder(expr.getOperands().get(0)));
 				/*
 				 * if (columnHelper != null) { buffer.append("CAST (");
@@ -1071,7 +1100,5 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 		return buffer.toString();
 	}
-
-	
 
 }

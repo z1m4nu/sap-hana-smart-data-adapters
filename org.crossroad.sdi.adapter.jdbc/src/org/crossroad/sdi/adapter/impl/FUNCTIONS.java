@@ -26,6 +26,7 @@ public enum FUNCTIONS {
 	// Conversion
 	TO_DECIMAL, 
 	TO_VARCHAR, 
+	TO_NVARCHAR,
 	TO_INT, 
 	TO_TINYINT, 
 	TO_INTEGER, 
@@ -33,7 +34,8 @@ public enum FUNCTIONS {
 	TO_BIGINT, 
 	TO_REAL, 
 	TO_DOUBLE, 
-	TO_TIMESTAMP;
+	TO_TIMESTAMP,
+	TO_DATE;
 	static FUNCTIONS fromString(String x) throws Exception {
 
 		for (FUNCTIONS currentType : FUNCTIONS.values()) {
