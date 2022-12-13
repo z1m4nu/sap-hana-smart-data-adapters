@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.crossroad.sdi.adapter.db.jdbc;
+package org.crossroad.sdi.adapter.db.singlestore;
 
 import org.crossroad.sdi.adapter.db.IDBInfo;
 
@@ -11,19 +11,21 @@ import org.crossroad.sdi.adapter.db.IDBInfo;
  */
 public class DBInfo implements IDBInfo {
 
+
 	@Override
 	public String getDisplayName() {
-		return "Generic JDBC";
+		return "SingleStore Server";
 	}
 
 	@Override
 	public String getMappingFile() {
-		return "jdbc-mapping.properties";
+		return "mysql-mapping.properties";
 	}
 
 	@Override
 	public String getRewriterClass() {
-		return JDBCSQLRewriter.class.getCanonicalName();
+		return SingleStoreRewriter.class.getCanonicalName();
 	}
+
 
 }

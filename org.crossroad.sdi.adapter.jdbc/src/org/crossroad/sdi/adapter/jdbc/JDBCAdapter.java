@@ -72,7 +72,7 @@ public class JDBCAdapter extends AbstractJDBCAdapter {
 		PropertyGroup mainGroup = RemoteSourceDescriptionFactory.getJDBCConnectionGroup();
 		mainGroup.setDisplayName("JDBC Server connection definition");
 
-
+/*
 		PropertyEntry entry = new PropertyEntry(AdapterConstants.KEY_JDBC_TYPE, "Database behavior",
 				"Select the database behavior");
 		HashMap<String, String> map = new HashMap<String, String>();
@@ -84,6 +84,7 @@ public class JDBCAdapter extends AbstractJDBCAdapter {
 		entry.setDefaultValue(AdapterConstants.KEY_JDBC_TYPE_DEFAULT);
 
 		mainGroup.addProperty(entry);
+		*/
 
 		mainGroup.addProperty(new PropertyEntry(AdapterConstants.KEY_DATAMAPPING_FILE, "Custom mapping file", "Mapping file", false));
 		

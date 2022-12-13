@@ -36,6 +36,7 @@ webpack.generated.js
 *.zip
 *.tar.gz
 *.rar
+java*.log
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

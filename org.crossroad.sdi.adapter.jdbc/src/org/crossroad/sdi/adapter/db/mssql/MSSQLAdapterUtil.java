@@ -3,8 +3,6 @@ package org.crossroad.sdi.adapter.db.mssql;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import org.crossroad.sdi.adapter.impl.UniqueNameTools;
-
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 
 public class MSSQLAdapterUtil {

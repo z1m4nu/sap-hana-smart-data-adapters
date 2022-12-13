@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.crossroad.sdi.adapter.db.jdbc;
+package org.crossroad.sdi.adapter.db.postgresql;
 
 import org.crossroad.sdi.adapter.db.IDBInfo;
 
@@ -11,9 +11,10 @@ import org.crossroad.sdi.adapter.db.IDBInfo;
  */
 public class DBInfo implements IDBInfo {
 
+
 	@Override
 	public String getDisplayName() {
-		return "Generic JDBC";
+		return "PostGreSQL Server";
 	}
 
 	@Override
@@ -23,7 +24,8 @@ public class DBInfo implements IDBInfo {
 
 	@Override
 	public String getRewriterClass() {
-		return JDBCSQLRewriter.class.getCanonicalName();
+		return PGSQLRewriter.class.getCanonicalName();
 	}
+
 
 }

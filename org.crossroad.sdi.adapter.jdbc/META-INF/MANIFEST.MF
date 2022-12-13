@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JDBC Adapter
 Bundle-SymbolicName: org.crossroad.sdi.adapter.jdbc
-Bundle-Version: 2.0.1
+Bundle-Version: 2.0.3
 Bundle-Activator: org.crossroad.sdi.adapter.jdbc.Activator
 Require-Bundle: org.apache.log4j;bundle-version="1.2.15",
  com.sap.hana.dp.adapterframework

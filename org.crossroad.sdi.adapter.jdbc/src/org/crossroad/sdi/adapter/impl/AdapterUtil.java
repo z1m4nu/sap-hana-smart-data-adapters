@@ -6,11 +6,10 @@ package org.crossroad.sdi.adapter.impl;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Formatter;
-import java.util.Properties;
 
+import com.sap.hana.dp.adapter.sdk.AdapterConstant.NodeType;
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.PropertyGroup;
-import com.sap.hana.dp.adapter.sdk.AdapterConstant.NodeType;
 
 /**
  * @author e.soden
@@ -22,12 +21,11 @@ public class AdapterUtil {
 	 * 
 	 */
 	protected AdapterUtil() {
-		// TODO Auto-generated constructor stub
 	}
 
 
 	public static String removeSingleQuote(String str) {
-		return str.replaceAll("\'", "");
+		return str.replace("\'", "");
 	}
 
 	/**

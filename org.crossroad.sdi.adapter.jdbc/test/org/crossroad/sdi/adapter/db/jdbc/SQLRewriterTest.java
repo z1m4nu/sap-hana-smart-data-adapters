@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.crossroad.sdi.adapter.db.jdbc.JDBCSQLRewriter;
+import org.crossroad.sdi.adapter.db.mysql.MySQLRewriter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -134,4 +135,6 @@ public class SQLRewriterTest {
 			fail(e);
 		}
 	}
+	
+	
 }

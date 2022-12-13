@@ -5,14 +5,13 @@ package org.crossroad.sdi.adapter.db;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.crossroad.sdi.adapter.impl.FUNCTIONS;
+import org.crossroad.sdi.adapter.functions.FunctionUtils;
 import org.crossroad.sdi.adapter.impl.ISQLRewriter;
 import org.crossroad.sdi.adapter.impl.UniqueNameTools;
 import org.crossroad.sdi.adapter.utils.StringUtils;
@@ -71,35 +70,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 	protected int getMaxIdentifierLength() {
 		return maxIdentifierLength;
-	}
-
-	protected String printFxColumns(Expression expr) throws AdapterException {
-		StringBuilder buffer = new StringBuilder();
-		buffer.setLength(0);
-		boolean first = true;
-
-		try {
-			FUNCTIONS fx = FUNCTIONS.valueOf(expr.getValue());
-
-			buffer.append(fx.name());
-			buffer.append("(");
-
-			for (ExpressionBase b : expr.getOperands()) {
-				if (first) {
-					first = false;
-				} else {
-					buffer.append(", ");
-				}
-
-				buffer.append(expressionBuilder(b));
-
-			}
-			buffer.append(")");
-		} catch (Exception e) {
-			throw new AdapterException(e);
-		}
-
-		return buffer.toString();
 	}
 
 	protected String clauseBuilder(String keyword, List<ExpressionBase> eprx) throws AdapterException {
@@ -734,10 +704,12 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 
 				return StringUtils.hasText(sqlRewrite) ? sqlRewrite.trim() : null;
 			}
+
+			StringBuilder errorBuilder = new StringBuilder("Parse failed. See earlier logs\n");
 			for (ExpressionParserMessage e : messageList) {
-				this.logger.error(e.getText());
+				errorBuilder.append(String.format("[%s] - %s", e.getSeverity().name(), e.getText()));
 			}
-			throw new AdapterException("Parse failed. See earlier logs");
+			throw new AdapterException(errorBuilder.toString());
 		} catch (Exception e) {
 			this.logger.error("SQL Rewrite failed.", e);
 			throw new AdapterException(e, "Parser failed. See earlier logs");
@@ -750,7 +722,8 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		String newAlias = (String) this.aliasMap.get(alias);
 		if (newAlias == null) {
-			newAlias = alias.replace("\"", "");//String.valueOf(this.aliasSeed++);
+			newAlias = alias;
+			// alias.replace("\"", "");// String.valueOf(this.aliasSeed++);
 			this.aliasMap.put(alias, newAlias);
 		}
 		return newAlias;
@@ -822,13 +795,13 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		if ("*".equalsIgnoreCase(colRef.getColumnName())) {
 			str.append("*");
 		} else {
-			str.append(colRef.getColumnName().replaceAll("\"", ""));
+			str.append(colRef.getColumnName().replace("\"", ""));
 		}
 
 		/*
 		 * 
 		 */
-		
+
 		return str.toString();
 	}
 
@@ -844,12 +817,11 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			break;
 		case AND:
 			str.append(expressionAND((Expression) val));
-
-//			if (val instanceof TableReference) {
-//				str.append(tableNameBuilder((TableReference) val));
-//			} else {
-//				str.append(expressionAND((Expression)val));
-//			}
+			break;
+		case UNARY_POSITIVE:
+		case UNARY_NEGATIVE:
+			str.append(((Expression) val).getValue())
+					.append(expressionBuilder(((Expression) val).getOperands().get(0)));
 			break;
 		case TABLE:
 			str.append(tableNameBuilder((TableReference) val));
@@ -927,6 +899,16 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 			str.append(expressionCASE((Expression) val));
 			break;
 		case NULL:
+			str.append("NULL");
+			break;
+		case BOTH:
+		case LEADING:
+		case TRAILING:
+			str.append(val.getType().name());
+			break;
+		case TRIM:
+			str.append(trimFunctionBuilder((Expression) val));
+			break;
 		case DELETE:
 		case ORDER_BY:
 		case VARIABLE:
@@ -939,17 +921,17 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		case CASE_CLAUSES:
 		case CASE_ELSE:
 			// case ROW_NUMBER:
-		case UNARY_POSITIVE:
+
 		case INSERT:
 		default:
 			throw new AdapterException("Unknown value [" + ((Expression) val).getValue() + "]");
 		}
-		
+
 		if (StringUtils.hasText(val.getAlias())) {
 			str.append(" ");
-			str.append(aliasRewriter(val.getAlias().replace("\"", "")));
+			str.append(aliasRewriter(val.getAlias()));
 		}
-		
+
 		return str.toString();
 	}
 
@@ -984,7 +966,6 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	/**
-	 * Build function expression
 	 * 
 	 * @param expr
 	 * @return
@@ -992,118 +973,40 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	 */
 	protected String expressionSQLFunctionsBuilder(Expression expr) throws AdapterException {
 		StringBuilder buffer = new StringBuilder();
-		// buffer.setLength(0);
-		FUNCTIONS fx = FUNCTIONS.valueOf(expr.getValue());
-		try {
-			switch (fx) {
-			case TO_DOUBLE:
-				buffer.append("CAST(");
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				buffer.append(" AS DOUBLE PRECISION");
-				buffer.append(")");
-				break;
-			case TO_DECIMAL:
-				List<ExpressionBase> params = expr.getOperands();
-				if (params.size() < 3) {
-					buffer.append("CAST(");
-					buffer.append(expressionBuilder(expr.getOperands().get(0)));
-					buffer.append(" AS DECIMAL");
-					buffer.append(")");
-				} else {
-					buffer.append("CAST(");
-					buffer.append(expressionBuilder(expr.getOperands().get(0)));
-					buffer.append(" AS DECIMAL(");
-					buffer.append(expressionBuilder(expr.getOperands().get(1)));
-					buffer.append(",");
-					buffer.append(expressionBuilder(expr.getOperands().get(2)));
-					buffer.append(")");
-					buffer.append(")");
-				}
-				break;
-			case TO_REAL:
-			case TO_INT:
-			case TO_INTEGER:
-			case TO_SMALLINT:
-			case TO_TINYINT:
-			case TO_BIGINT:
-			case TO_TIMESTAMP:
-			case TO_DATE:
-				buffer.append("CAST(");
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				buffer.append(" AS ");
-				buffer.append(fx.suffix());
-				buffer.append(")");
-				break;
-			case MOD:
-				buffer.append("(").append(expressionBuilder(expr.getOperands().get(0))).append(" % ")
-						.append(expressionBuilder(expr.getOperands().get(1))).append(")");
-				break;
-			case ATAN2:
-			case STDDEV:
-			case AVG:
-				if (expr.getValue().equals("ATAN2")) {
-					buffer.append("ATN2 (");
-				} else if (expr.getValue().equals("STDDEV")) {
-					buffer.append("STDEV (");
-				} else if (expr.getValue().equals("AVG")) {
-					buffer.append("AVG (");
-				} else {
-					buffer.append(expr.getValue() + "(");
-				}
-				boolean first = true;
-				for (ExpressionBase param : expr.getOperands()) {
-					if (first) {
-						if (param.getType() == ExpressionBase.Type.DISTINCT) {
-							buffer.append("DISTINCT ");
-							continue;
-						}
-						first = false;
-					} else {
-						buffer.append(", ");
-					}
-					buffer.append(expressionBuilder(param));
-				}
-				/*
-				 * if (expr.getValue().equals("AVG")) { buffer.append(" * 1.0 )"); } else {
-				 * buffer.append(")"); }
-				 */
-				buffer.append(")");
-				break;
-			case TO_VARCHAR:
-			case TO_NVARCHAR:
-				buffer.append(expressionBuilder(expr.getOperands().get(0)));
-				/*
-				 * if (columnHelper != null) { buffer.append("CAST (");
-				 * buffer.append(printExpression(expr.getOperands().get(0)));
-				 * buffer.append(" AS VARCHAR)"); } else { buffer.append("-- " +
-				 * expr.getValue()); }
-				 */
-				break;
-			case CONCAT:
-				buffer.append(expressionCONCAT(expr));
-				break;
-			case SUM:
-			case COUNT:
-			case MIN:
-			case MAX:
-			case LN:
-			case LOG:
-			case CEIL:
-			case TRIM:
-			case LTRIM:
-			case RTRIM:
-			case UPPER:
-			case LOWER:
-				buffer.append(printFxColumns(expr));
-				break;
-			default:
-				throw new AdapterException("Function [" + expr.getValue() + "] is not supported.");
-			}
-		} catch (Exception e) {
-			throw new AdapterException(e, "Error while building function [" + expr.getValue() + "].");
+
+		if (FunctionUtils.isAggregateFunction(expr.getValue())) {
+			buffer.append(aggregateFunctionBuilder(expr));
+		} else if (FunctionUtils.isConversionFunction(expr.getValue())) {
+			buffer.append(castFunctionBuilder(expr));
+		} else if (FunctionUtils.isMiscFunction(expr.getValue())) {
+			buffer.append(miscFunctionBuilder(expr));
+		} else if (FunctionUtils.isNumericFunction(expr.getValue())) {
+			buffer.append(numericFunctionBuilder(expr));
+		} else if (FunctionUtils.isStringFunction(expr.getValue())) {
+			buffer.append(stringFunctionBuilder(expr));
+		} else if (FunctionUtils.isTimeFunction(expr.getValue())) {
+			buffer.append(timeFunctionBuilder(expr));
+		} else {
+			throw new AdapterException("Function [" + expr.getValue() + "] is not supported.");
 		}
 
 		return buffer.toString();
 	}
 
+
+	protected abstract String numericFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String aggregateFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String miscFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String trimFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String stringFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String castFunctionBuilder(Expression expr) throws AdapterException;
+
+	protected abstract String timeFunctionBuilder(Expression expr) throws AdapterException;
+
+	
 }

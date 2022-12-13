@@ -3,8 +3,6 @@
  */
 package org.crossroad.sdi.adapter.impl;
 
-import com.sap.hana.dp.adapter.sdk.Capabilities;
-
 import java.util.ArrayList;
 import java.util.List;
 

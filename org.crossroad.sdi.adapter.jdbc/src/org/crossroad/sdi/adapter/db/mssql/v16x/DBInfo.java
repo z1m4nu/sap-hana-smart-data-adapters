@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.crossroad.sdi.adapter.db.jdbc;
+package org.crossroad.sdi.adapter.db.mssql.v16x;
 
 import org.crossroad.sdi.adapter.db.IDBInfo;
 
@@ -11,19 +11,20 @@ import org.crossroad.sdi.adapter.db.IDBInfo;
  */
 public class DBInfo implements IDBInfo {
 
+
 	@Override
 	public String getDisplayName() {
-		return "Generic JDBC";
+		return "Microsoft SQL Server v16.x+";
 	}
 
 	@Override
 	public String getMappingFile() {
-		return "jdbc-mapping.properties";
+		return "mssql-v16x-mapping.properties";
 	}
 
 	@Override
 	public String getRewriterClass() {
-		return JDBCSQLRewriter.class.getCanonicalName();
+		return MSSQLV16xRewriter.class.getCanonicalName();
 	}
 
 }

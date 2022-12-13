@@ -4,13 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -32,11 +31,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.crossroad.sdi.adapter.db.DBDetector;
 import org.crossroad.sdi.adapter.db.IDBInfo;
-import org.osgi.framework.Bundle;
+import org.crossroad.sdi.adapter.db.jdbc.DBInfo;
 
 import com.sap.hana.dp.adapter.sdk.Adapter;
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.AdapterCapability;
@@ -102,19 +101,12 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	protected ExpressionBase.Type pstmtType = ExpressionBase.Type.QUERY;
 
 	protected PreparedStatement pstmt = null;
-	
+
 	private ISQLRewriter sqlRewriter = null;
-	
 
 	public AbstractJDBCAdapter() {
 		super();
-
 		logger = LogManager.getLogger(getClass().getSimpleName());
-		/*
-		 * Debug purpose
-		 */
-		logger.setLevel(Level.DEBUG);
-
 	}
 
 	protected abstract void populateCFGDriverList(PropertyEntry drvList) throws AdapterException;
@@ -132,11 +124,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	@Override
 	public void open(RemoteSourceDescription connectionInfo, boolean isCDC) throws AdapterException {
 
-		
-		
 		this.isCDC = isCDC;
-
-		
 
 		String username = "";
 		String password = "";
@@ -148,16 +136,10 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			c = p.getCredentialEntry("db_credential");
 		}
 
-		try {
-			username = new String(c.getUser().getValue(), "UTF-8");
-			password = new String(c.getPassword().getValue(), "UTF-8");
-		} catch (UnsupportedEncodingException e1) {
-			logger.error("Error while encoding credential", e1);
-			throw new AdapterException(e1);
-		}
+		username = new String(c.getUser().getValue(), StandardCharsets.UTF_8);
+		password = new String(c.getPassword().getValue(), StandardCharsets.UTF_8);
 
 		PropertyGroup connectionGroup = connectionInfo.getConnectionProperties();
-
 
 		String jdbcUrl = getJdbcUrl(connectionGroup);
 		String jdbcClass = connectionGroup.getPropertyEntry(AdapterConstants.KEY_JDBC_DRIVERCLASS).getValue();
@@ -209,7 +191,6 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 				logger.warn("Unable to retrieve database information", e);
 			}
 
-
 			initAdapter(connectionInfo);
 		} catch (Exception e) {
 			logger.error("Error while creating JDBC Connection", e);
@@ -232,7 +213,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			stmt.setFetchSize(fetchSize);
 
 			PropertyGroup connexionGroup = description.getConnectionProperties();
-			
+
 			listSystemData = (connexionGroup.getPropertyEntry(AdapterConstants.KEY_WITHSYS) != null)
 					? AdapterConstants.BOOLEAN_TRUE.equalsIgnoreCase(
 							connexionGroup.getPropertyEntry(AdapterConstants.KEY_WITHSYS).getValue())
@@ -243,7 +224,6 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 							connexionGroup.getPropertyEntry(AdapterConstants.KEY_NULLASEMPTYSTRING).getValue())
 					: false;
 
-			
 			cfgResultSet = this.connection.getMetaData().getTableTypes();
 
 			while (cfgResultSet.next()) {
@@ -258,15 +238,14 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			/*
 			 * Mapping
 			 */
-			PropertyEntry entry = connexionGroup.getPropertyEntry(AdapterConstants.KEY_JDBC_TYPE);
-			String jdbcType = entry.getValue();
-			
-			if (jdbcType == null)
-			{
-				jdbcType = AdapterConstants.KEY_JDBC_TYPE_DEFAULT;
+			IDBInfo info = null;
+
+			try {
+				info = DBDetector.detect(connection);
+			} catch (Exception e) {
+				logger.warn("Erro while detecting database.", e);
+				info = new DBInfo();
 			}
-			
-			IDBInfo info = (IDBInfo) Class.forName(jdbcType).newInstance();
 
 			if (info != null) {
 				/*
@@ -274,21 +253,14 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 				 */
 				String customMapping = null;
 				PropertyEntry mappingEntry = connexionGroup.getPropertyEntry(AdapterConstants.KEY_DATAMAPPING_FILE);
-				if(mappingEntry != null)
-				{
+				if (mappingEntry != null) {
 					customMapping = mappingEntry.getValue();
 				}
-				
-				
 				columnBuilder.loadMapping(info.getMappingFile(), customMapping);
-				
-				sqlRewriter = (ISQLRewriter)Class.forName(info.getRewriterClass()).newInstance();//info.getRewriter();
 
+				sqlRewriter = (ISQLRewriter) Class.forName(info.getRewriterClass()).newInstance();// info.getRewriter();
 
 			}
-			
-			
-			
 
 		} catch (Exception e) {
 			throw new AdapterException(e);
@@ -302,8 +274,6 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			}
 		}
 	}
-
-	
 
 	@Override
 	public void close() throws AdapterException {
@@ -459,7 +429,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 					return 0; // We can not send 0 bytes array
 				ByteBuffer bb = ByteBuffer.wrap(bytes);
 				CharBuffer cb = CharBuffer.wrap(buffer, 0, readBytes);
-				ByteBuffer result = Charset.forName("UTF-8").encode(cb);
+				ByteBuffer result = StandardCharsets.UTF_8.encode(cb);
 				bb.put(result);
 				return result.position();
 			} else {
@@ -698,6 +668,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 		String str = null;
 
 		switch (column.getDataType()) {
+		case REAL:
 		case TINYINT:
 		case SMALLINT:
 		case INTEGER:
@@ -1055,9 +1026,9 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			logger.debug("Incoming SQL Statement [" + sqlstatement + "]");
 			String pstmtStr = rewriteSQL(sqlstatement);
 			logger.debug("Generated SQL Statement [" + pstmtStr + "]");
-			
+
 			this.pstmtType = this.sqlRewriter.getQueryType();
-			
+
 			info.setExecuteStatement(pstmtStr);
 			this.connection.setAutoCommit(false);
 			this.pstmt = this.connection.prepareStatement(pstmtStr);
@@ -1096,7 +1067,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 				pstmt.setBigDecimal(i + 1, new BigDecimal(paramValue));
 				break;
 			case DATE:
-				pstmt.setBytes(i + 1, paramValue.getBytes(Charset.forName("UTF-8")));
+				pstmt.setBytes(i + 1, paramValue.getBytes(StandardCharsets.UTF_8));
 				break;
 			case INVALID:
 				pstmt.setDate(i + 1, Date.valueOf(paramValue));
@@ -1270,17 +1241,13 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.crossroad.sdi.adapter.impl.IJDBCAdapter#rewriteSQL(java.lang.String)
 	 */
 	public String rewriteSQL(String sqlstatement) throws AdapterException {
 		return this.sqlRewriter.rewriteSQL(sqlstatement);
 	}
-	
-	
-	
 
-	
-	
 }
 
 final class DriverDelegator implements Driver {

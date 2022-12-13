@@ -43,6 +43,7 @@ public class ColumnBuilder {
 			logger.info("DB Default Mapping ["+dbDefaultMapping+"]");
 			logger.info("Custom Mapping ["+customMapping+"]");
 
+			loadDefaultTemplates();
 
 			if (dbDefaultMapping != null) {
 				mappingTable.load(IDataMapping.class.getResourceAsStream(dbDefaultMapping));
@@ -61,6 +62,15 @@ public class ColumnBuilder {
 			throw new AdapterException(e);
 		}
 
+	}
+	
+	private void loadDefaultTemplates() {
+		try {
+			mappingTable.load(IDataMapping.class.getResourceAsStream("jdbc-mapping.properties"));
+		} catch(Exception e)
+		{
+			logger.error("Error while loading default template", e);
+		}
 	}
 
 	public Column createColumn(String name, int jdbcType, String jdbcTypeName, int length, int precision, int scale) {
