@@ -42,3 +42,4 @@ java*.log
 hs_err_pid*
 /jacoco/
 /.factorypath
+/lib/
