@@ -211,17 +211,10 @@ public class TableMetadataBuilder {
 				int size = rs.getInt("COLUMN_SIZE");
 				int nullable = rs.getInt("NULLABLE");
 				int scale = rs.getInt("DECIMAL_DIGITS");
-				String remarks = rs.getString("REMARKS");
-				String autoIncrement = rs.getString("IS_AUTOINCREMENT");
 
 				Column column = columnBuilder.createColumn(columnName, columnType, typeName, size, size, scale);
 
 				column.setNullable(nullable == 1);
-				column.setDescription(remarks);
-				if(StringUtils.hasText(autoIncrement))
-				{
-					column.setAutoIncrement("YES".equalsIgnoreCase(autoIncrement));
-				}
 
 				columnHelper.addColumn(column, columnType);
 				Capabilities<ColumnCapability> columnCaps = new Capabilities<>();
