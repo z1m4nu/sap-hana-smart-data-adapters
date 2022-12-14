@@ -4,7 +4,7 @@
 package org.crossroad.sdi.adapter.db.postgresql;
 
 import org.crossroad.sdi.adapter.db.jdbc.JDBCSQLRewriter;
-import org.crossroad.sdi.adapter.functions.CONVERSION;
+import org.crossroad.sdi.adapter.impl.functions.CONVERSION;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.parser.Expression;

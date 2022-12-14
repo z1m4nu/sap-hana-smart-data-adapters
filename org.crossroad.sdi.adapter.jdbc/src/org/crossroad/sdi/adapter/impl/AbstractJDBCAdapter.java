@@ -38,7 +38,7 @@ import org.apache.log4j.Logger;
 import org.crossroad.sdi.adapter.db.DBDetector;
 import org.crossroad.sdi.adapter.db.IDBInfo;
 import org.crossroad.sdi.adapter.db.jdbc.DBInfo;
-import org.crossroad.sdi.adapter.tables.TableMetadataBuilder;
+import org.crossroad.sdi.adapter.impl.tables.TableMetadataBuilder;
 
 import com.sap.hana.dp.adapter.sdk.Adapter;
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.AdapterCapability;

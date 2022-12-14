@@ -6,12 +6,12 @@ package org.crossroad.sdi.adapter.db.jdbc;
 import java.util.List;
 
 import org.crossroad.sdi.adapter.db.AbstractSQLRewriter;
-import org.crossroad.sdi.adapter.functions.AGGREGATE;
-import org.crossroad.sdi.adapter.functions.CONVERSION;
-import org.crossroad.sdi.adapter.functions.MISC;
-import org.crossroad.sdi.adapter.functions.NUMERIC;
-import org.crossroad.sdi.adapter.functions.STRING;
-import org.crossroad.sdi.adapter.functions.TIME;
+import org.crossroad.sdi.adapter.impl.functions.AGGREGATE;
+import org.crossroad.sdi.adapter.impl.functions.CONVERSION;
+import org.crossroad.sdi.adapter.impl.functions.MISC;
+import org.crossroad.sdi.adapter.impl.functions.NUMERIC;
+import org.crossroad.sdi.adapter.impl.functions.STRING;
+import org.crossroad.sdi.adapter.impl.functions.TIME;
 import org.crossroad.sdi.adapter.utils.StringUtils;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;

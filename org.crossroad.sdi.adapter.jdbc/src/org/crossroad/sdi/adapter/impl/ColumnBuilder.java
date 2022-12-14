@@ -8,7 +8,7 @@ import java.util.Properties;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.crossroad.sdi.adapter.data.mappings.IDataMapping;
+import org.crossroad.sdi.adapter.impl.mappings.IDataMapping;
 
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.DataType;
 import com.sap.hana.dp.adapter.sdk.AdapterException;

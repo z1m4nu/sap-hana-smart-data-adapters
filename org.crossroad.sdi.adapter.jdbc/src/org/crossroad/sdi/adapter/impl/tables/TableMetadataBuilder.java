@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.crossroad.sdi.adapter.tables;
+package org.crossroad.sdi.adapter.impl.tables;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;

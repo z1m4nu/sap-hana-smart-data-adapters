@@ -11,9 +11,9 @@ import java.util.Map;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.crossroad.sdi.adapter.functions.FunctionUtils;
 import org.crossroad.sdi.adapter.impl.ISQLRewriter;
 import org.crossroad.sdi.adapter.impl.UniqueNameTools;
+import org.crossroad.sdi.adapter.impl.functions.FunctionUtils;
 import org.crossroad.sdi.adapter.utils.StringUtils;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;

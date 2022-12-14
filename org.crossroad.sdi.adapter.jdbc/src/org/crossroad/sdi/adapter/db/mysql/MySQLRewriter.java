@@ -4,9 +4,9 @@
 package org.crossroad.sdi.adapter.db.mysql;
 
 import org.crossroad.sdi.adapter.db.jdbc.JDBCSQLRewriter;
-import org.crossroad.sdi.adapter.functions.AGGREGATE;
-import org.crossroad.sdi.adapter.functions.CONVERSION;
-import org.crossroad.sdi.adapter.functions.TIME;
+import org.crossroad.sdi.adapter.impl.functions.AGGREGATE;
+import org.crossroad.sdi.adapter.impl.functions.CONVERSION;
+import org.crossroad.sdi.adapter.impl.functions.TIME;
 import org.crossroad.sdi.adapter.utils.StringUtils;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;

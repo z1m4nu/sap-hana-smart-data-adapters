@@ -1,4 +1,4 @@
-package org.crossroad.sdi.adapter.functions;
+package org.crossroad.sdi.adapter.impl.functions;
 
 public enum AGGREGATE {
 

@@ -4,8 +4,8 @@
 package org.crossroad.sdi.adapter.db.singlestore;
 
 import org.crossroad.sdi.adapter.db.mysql.MySQLRewriter;
-import org.crossroad.sdi.adapter.functions.AGGREGATE;
-import org.crossroad.sdi.adapter.functions.CONVERSION;
+import org.crossroad.sdi.adapter.impl.functions.AGGREGATE;
+import org.crossroad.sdi.adapter.impl.functions.CONVERSION;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.parser.Expression;
