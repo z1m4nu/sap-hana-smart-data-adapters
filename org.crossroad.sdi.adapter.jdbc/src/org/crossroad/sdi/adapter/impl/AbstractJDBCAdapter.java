@@ -28,20 +28,21 @@ import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.crossroad.sdi.adapter.db.DBDetector;
 import org.crossroad.sdi.adapter.db.IDBInfo;
 import org.crossroad.sdi.adapter.db.jdbc.DBInfo;
+import org.crossroad.sdi.adapter.tables.TableMetadataBuilder;
 
 import com.sap.hana.dp.adapter.sdk.Adapter;
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.AdapterCapability;
-import com.sap.hana.dp.adapter.sdk.AdapterConstant.ColumnCapability;
 import com.sap.hana.dp.adapter.sdk.AdapterConstant.LobCharset;
-import com.sap.hana.dp.adapter.sdk.AdapterConstant.TableCapability;
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.AdapterRow;
 import com.sap.hana.dp.adapter.sdk.AdapterRowSet;
@@ -54,7 +55,6 @@ import com.sap.hana.dp.adapter.sdk.CredentialProperties;
 import com.sap.hana.dp.adapter.sdk.DataDictionary;
 import com.sap.hana.dp.adapter.sdk.DataInfo;
 import com.sap.hana.dp.adapter.sdk.FunctionMetadata;
-import com.sap.hana.dp.adapter.sdk.Index;
 import com.sap.hana.dp.adapter.sdk.Metadata;
 import com.sap.hana.dp.adapter.sdk.Parameter;
 import com.sap.hana.dp.adapter.sdk.ParametersResponse;
@@ -64,9 +64,7 @@ import com.sap.hana.dp.adapter.sdk.PropertyGroup;
 import com.sap.hana.dp.adapter.sdk.RemoteObjectsFilter;
 import com.sap.hana.dp.adapter.sdk.RemoteSourceDescription;
 import com.sap.hana.dp.adapter.sdk.StatementInfo;
-import com.sap.hana.dp.adapter.sdk.TableMetadata;
 import com.sap.hana.dp.adapter.sdk.Timestamp;
-import com.sap.hana.dp.adapter.sdk.UniqueKey;
 import com.sap.hana.dp.adapter.sdk.parser.ExpressionBase;
 
 /**
@@ -89,15 +87,15 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	protected int fetchSize;
 	protected boolean listSystemData = false;
 	protected boolean nullableAsEmpty = false;
-	protected ColumnHelper columnHelper = new ColumnHelper();
+
 	protected HashMap<Long, InputStream> blobHandle;
 	protected HashMap<Long, Reader> clobHandle;
 
 	protected boolean isCDC = false;
 
-	protected ColumnBuilder columnBuilder = new ColumnBuilder();
+	private TableMetadataBuilder tableMetadataBuilder = null;
 
-	private List<String> tablesType = new ArrayList<String>();
+	private List<String> tablesType = new LinkedList<>();
 	protected ExpressionBase.Type pstmtType = ExpressionBase.Type.QUERY;
 
 	protected PreparedStatement pstmt = null;
@@ -107,6 +105,8 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	public AbstractJDBCAdapter() {
 		super();
 		logger = LogManager.getLogger(getClass().getSimpleName());
+
+		logger.setLevel(Level.ALL);
 	}
 
 	protected abstract void populateCFGDriverList(PropertyEntry drvList) throws AdapterException;
@@ -256,9 +256,11 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 				if (mappingEntry != null) {
 					customMapping = mappingEntry.getValue();
 				}
-				columnBuilder.loadMapping(info.getMappingFile(), customMapping);
 
-				sqlRewriter = (ISQLRewriter) Class.forName(info.getRewriterClass()).newInstance();// info.getRewriter();
+				tableMetadataBuilder = new TableMetadataBuilder();
+				tableMetadataBuilder.init(info.getMappingFile(), customMapping);
+
+				sqlRewriter = (ISQLRewriter) Class.forName(info.getRewriterClass()).newInstance();
 
 			}
 
@@ -669,6 +671,8 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 
 		switch (column.getDataType()) {
 		case REAL:
+			row.setColumnValue(colIndex, rs.getShort(colIndex + 1));
+			break;
 		case TINYINT:
 		case SMALLINT:
 		case INTEGER:
@@ -687,62 +691,62 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			BigDecimal bigDecimal = rs.getBigDecimal(colIndex + 1);
 			if (bigDecimal == null) {
 				row.setColumnNull(colIndex);
-				break;
+			} else {
+				row.setColumnValue(colIndex, bigDecimal);
 			}
-			row.setColumnValue(colIndex, bigDecimal);
 			break;
 		case VARBINARY:
 			byte[] bytes = rs.getBytes(colIndex + 1);
 			if (bytes == null) {
 				row.setColumnNull(colIndex);
-				break;
+			} else {
+				row.setColumnValue(colIndex, bytes);
 			}
-			row.setColumnValue(colIndex, bytes);
 			break;
 		case DATE:
 			Date date = rs.getDate(colIndex + 1);
 			if (date == null) {
 				row.setColumnNull(colIndex);
-				break;
+			} else {
+				cal.setTime(date);
+				row.setColumnValue(colIndex, new Timestamp(cal));
 			}
-			cal.setTime(date);
-			row.setColumnValue(colIndex, new Timestamp(cal));
 			break;
 		case SECONDDATE:
 		case TIME:
 			Time time = rs.getTime(colIndex + 1);
 			if (time == null) {
 				row.setColumnNull(colIndex);
-				break;
+			} else {
+				cal.setTime(time);
+				row.setColumnValue(colIndex, new Timestamp(cal));
 			}
-			cal.setTime(time);
-			row.setColumnValue(colIndex, new Timestamp(cal));
 			break;
 		case TIMESTAMP:
 			java.sql.Timestamp timeStamp = rs.getTimestamp(colIndex + 1);
 			if (timeStamp == null) {
 				row.setColumnNull(colIndex);
-				break;
+			} else {
+				cal.setTimeInMillis(timeStamp.getTime());
+				row.setColumnValue(colIndex, new Timestamp(cal));
 			}
-			cal.setTimeInMillis(timeStamp.getTime());
-			row.setColumnValue(colIndex, new Timestamp(cal));
 			break;
 		case BLOB:
 			Blob blob1 = rs.getBlob(colIndex + 1);
 			if (blob1 == null) {
 				row.setColumnLobIdValue(colIndex, 0, LobCharset.ASCII);
-				column.setNullable(true); /// TODO
-				break;
+				column.setNullable(true);
+			} else {
+				blobHandle.put(lobId, blob1.getBinaryStream());
+				row.setColumnLobIdValue(colIndex, lobId, LobCharset.ASCII);
 			}
-			blobHandle.put(lobId, blob1.getBinaryStream());
-			row.setColumnLobIdValue(colIndex, lobId, LobCharset.ASCII);
 			break;
 		case CLOB:
 		case NCLOB:
 			Clob clob = rs.getClob(colIndex + 1);
 			if (clob == null) {
 				row.setColumnLobIdValue(colIndex, 0, LobCharset.ASCII);
-				column.setNullable(true); /// TODO
+				column.setNullable(true);
 			} else {
 				clobHandle.put(lobId, clob.getCharacterStream());// clob.getAsciiStream());
 				row.setColumnLobIdValue(colIndex, lobId, LobCharset.UTF_8);
@@ -754,8 +758,9 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			if (str == null) {
 				str = (nullableAsEmpty) ? "" : null;
 				row.setColumnNull(colIndex);
+			} else {
+				row.setColumnValue(colIndex, str);
 			}
-			row.setColumnValue(colIndex, str);
 			break;
 		default:
 			logger.error("Unknown Type " + column.getDataType() + " for column "
@@ -764,8 +769,9 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			if (str == null) {
 				str = (nullableAsEmpty) ? "" : null;
 				row.setColumnNull(colIndex);
+			} else {
+				row.setColumnValue(colIndex, str);
 			}
-			row.setColumnValue(colIndex, str);
 			break;
 		}
 	}
@@ -773,221 +779,12 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	@Override
 	public Metadata importMetadata(String tableuniquename) throws AdapterException {
 		logger.debug("Function -  [importMetadata]");
-		/*
-		 * nodeId does match the format: catalog.schema.tablename
-		 */
-		UniqueNameTools tools = UniqueNameTools.build(tableuniquename);
-
-		if ((tools.getCatalog() == null && tools.getSchema() == null)) {
-			throw new AdapterException(
-					"Unique Name of the table does not match the format catalog.schema.tablename: " + tableuniquename);
-		}
-
-		if (tools.getTable() == null) {
-			throw new AdapterException("Table Name portion cannot be empty: " + tableuniquename);
-		}
-
-		TableMetadata metas = new TableMetadata();
-		metas.setName(tools.getUniqueName());
-		metas.setPhysicalName(tools.getTable());
-		metas.setColumns(updateTableMetaDataColumns(tools));
-		metas.setUniqueKeys(updateTableMetaDataUniqueKeys(tools));
-		metas.setIndices(updateTableMetaDataIndices(tools));
-		setPrimaryFlagForColumns(metas);
-
-		Capabilities<TableCapability> caps = new Capabilities<TableCapability>();
-		caps.setCapability(TableCapability.CAP_TABLE_AND);
-		caps.setCapability(TableCapability.CAP_TABLE_AND_DIFFERENT_COLUMNS);
-		caps.setCapability(TableCapability.CAP_TABLE_COLUMN_CAP);
-		caps.setCapability(TableCapability.CAP_TABLE_LIMIT);
-		caps.setCapability(TableCapability.CAP_TABLE_OR);
-		caps.setCapability(TableCapability.CAP_TABLE_OR_DIFFERENT_COLUMNS);
-		caps.setCapability(TableCapability.CAP_TABLE_SELECT);
-		metas.setCapabilities(caps);
-
-		return metas;
-	}
-
-	/**
-	 * 
-	 * @param tableuniquename
-	 * @return
-	 * @throws AdapterException
-	 */
-	protected List<UniqueKey> updateTableMetaDataUniqueKeys(UniqueNameTools tools) throws AdapterException {
-		ArrayList<UniqueKey> uniqueKeys = new ArrayList<UniqueKey>();
-		DatabaseMetaData meta = null;
-		ResultSet rs = null;
-		HashMap<String, List<String>> map = new HashMap<String, List<String>>();
-
 		try {
-			logger.debug("Create unique key list for [" + tools.getCatalog() + "." + tools.getSchema() + "."
-					+ tools.getTable() + "]");
-			meta = connection.getMetaData();
-
-			rs = meta.getPrimaryKeys(tools.getCatalog(), tools.getSchema(), tools.getTable());
-
-			while (rs.next()) {
-				String indexName = rs.getString("PK_NAME");
-				if (indexName == null)
-					continue;
-				String fieldName = rs.getString("COLUMN_NAME");
-				if (!map.containsKey(indexName))
-					map.put(indexName, new ArrayList<String>());
-				map.get(indexName).add(fieldName);
-			}
-			for (String key : map.keySet()) {
-				UniqueKey uniqueKey = new UniqueKey(key, map.get(key));
-				uniqueKey.setPrimary(true);
-				uniqueKeys.add(uniqueKey);
-			}
-		} catch (SQLException e) {
-			logger.error("Error while creating key list", e);
-			throw new AdapterException(e);
-		} finally {
-			logger.debug("Closing ResultSet...");
-			try {
-				if (rs != null)
-					rs.close();
-			} catch (SQLException e) {
-				logger.warn("Failed to close ResultSet", e);
-			}
-
-			rs = null;
-		}
-		return uniqueKeys;
-	}
-
-	/**
-	 * 
-	 * @param nodecomponent
-	 * @param tableMetadata
-	 * @throws AdapterException
-	 */
-	protected void updateTableMetaData(Properties nodecomponent, TableMetadata tableMetadata) throws AdapterException {
-		logger.debug("Function -  [updateTableMetaData]");
-	}
-
-	/**
-	 * 
-	 * @param catalog
-	 * @param schema
-	 * @param tableName
-	 * @param columnNamePattern
-	 * @return
-	 * @throws AdapterException
-	 */
-
-	protected List<Column> updateTableMetaDataColumns(UniqueNameTools tools) throws AdapterException {
-		DatabaseMetaData meta = null;
-		ResultSet rsColumns = null;
-
-		List<Column> cols = new ArrayList<Column>();
-		try {
-			logger.debug("Create unique key list for [" + tools.getTable() + "]");
-			meta = connection.getMetaData();
-
-			rsColumns = meta.getColumns(tools.getCatalog(), tools.getSchema(), tools.getTable(), null);
-
-			while (rsColumns.next()) {
-				String columnName = rsColumns.getString("COLUMN_NAME");
-				int columnType = rsColumns.getInt("DATA_TYPE");
-				String typeName = rsColumns.getString("TYPE_NAME");
-				int size = rsColumns.getInt("COLUMN_SIZE");
-				int nullable = rsColumns.getInt("NULLABLE");
-				int scale = rsColumns.getInt("DECIMAL_DIGITS");
-
-				Column column = columnBuilder.createColumn(columnName, columnType, typeName, size, size, scale);
-
-				column.setNullable(nullable == 1);
-
-				columnHelper.addColumn(column, columnType);
-				Capabilities<ColumnCapability> columnCaps = new Capabilities<ColumnCapability>();
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_BETWEEN);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_FILTER);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_GROUP);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_IN);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_INNER_JOIN);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_LIKE);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_NONEQUAL_COMPARISON);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_OUTER_JOIN);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_SELECT);
-				columnCaps.setCapability(ColumnCapability.CAP_COLUMN_SORT);
-				column.setCapabilities(columnCaps);
-
-				cols.add(column);
-
-			}
-
-		} catch (SQLException e) {
-			logger.error("Error while building column list.", e);
-			throw new AdapterException(e);
-		} finally {
-			if (rsColumns != null) {
-				try {
-					rsColumns.close();
-				} catch (SQLException e) {
-					logger.warn("Error while closing ResultSet", e);
-				}
-				rsColumns = null;
-			}
-		}
-
-		return cols;
-	}
-
-	/**
-	 * 
-	 * @param nodecomponents
-	 * @return
-	 * @throws AdapterException
-	 */
-	protected List<Index> updateTableMetaDataIndices(UniqueNameTools tools) throws AdapterException {
-		List<Index> indices = new ArrayList<Index>();
-		ResultSet rs = null;
-
-		try {
-			rs = connection.getMetaData().getIndexInfo(tools.getCatalog(), tools.getSchema(), tools.getTable(), false,
-					true);
-
-			HashMap<String, Index> map = new HashMap<String, Index>();
-			while (rs.next()) {
-				String indexname = rs.getString("INDEX_NAME");
-
-				if (!map.containsKey(indexname)) {
-					Index index = new Index(indexname);
-					List<String> columns = new ArrayList<String>();
-					columns.add(rs.getString("COLUMN_NAME"));
-					index.setColumnNames(columns);
-					map.put(indexname, index);
-				} else {
-					Index index = map.get(indexname);
-					index.getColumnNames().add(rs.getString("COLUMN_NAME"));
-				}
-			}
-
-			for (Index index : map.values()) {
-				indices.add(index);
-			}
-
-		} catch (SQLException e) {
-			logger.error("Error while creating index list", e);
-			throw new AdapterException(e);
-		} finally {
-
-		}
-
-		return indices;
-	}
-
-	private void setPrimaryFlagForColumns(TableMetadata metas) {
-		List<Column> columns = metas.getColumns();
-		List<UniqueKey> keys = metas.getUniqueKeys();
-		for (UniqueKey key : keys) {
-			List<String> columnNames = key.getColumnNames();
-			for (Column column : columns)
-				if (columnNames.contains(column.getName()))
-					column.setPrimaryKey(true);
+			return tableMetadataBuilder.createMetaData(connection.getMetaData(), tableuniquename);
+		} catch (AdapterException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new AdapterException(e, String.format("Error while creating TableMetadata", tableuniquename));
 		}
 	}
 

@@ -90,4 +90,9 @@ public class UniqueNameTools {
 
 		return buffer.toString();
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("Catalog '%s' - Schema '%s' - Table '%s'", catalog, schema, table);
+	}
 }

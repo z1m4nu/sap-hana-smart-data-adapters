@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,87 +23,120 @@ import com.sap.hana.dp.adapter.sdk.AdapterConstant.ColumnCapability;
 
 public class DataTypesTest {
 
-
 	@Test
-	public void checkMSSQL()
+	public void checkMSSQL() {
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			Connection conn = DriverManager.getConnection(
+					"jdbc:sqlserver://;serverName=BASW0030.tally-weijl.ch;databaseName=TW_LOGISTICS_BASEL;encrypt=false",
+					"HANA", "sql2twl1");
+			checkDriver(conn);
+
+			ColumnBuilder cBuilder = new ColumnBuilder();
+			cBuilder.loadMapping("mssql-mapping.properties", null);
+
+			UniqueNameTools tools = UniqueNameTools.build("\"TW_LOGISTICS_BASEL.INFORMATION_SCHEMA.PARAMETERS\"");
+
+			checkinfo(conn, tools);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void checkSingleStoreAsMySQL()
 	{
 		try {
-			 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			  Connection conn = DriverManager.getConnection("jdbc:sqlserver://;serverName=BASW0030.tally-weijl.ch;databaseName=TW_LOGISTICS_BASEL;encrypt=false","HANA","sql2twl1");
+			 Class.forName("com.mysql.cj.jdbc.Driver");
+			  Connection conn = DriverManager.getConnection("jdbc:mysql://bavsl014147.tally-weijl.ch:3307/replication","replicator","TWeijl2016");
 			  checkDriver(conn);
-			  
-			  
-			  ColumnBuilder cBuilder = new ColumnBuilder();
-			  cBuilder.loadMapping("mssql-mapping.properties", null);
-			  
-			  UniqueNameTools tools = UniqueNameTools.build("\"TW_LOGISTICS_BASEL.dbo.EEM_Tracking_po_v1\"");
-			  
-			  checkColumns(cBuilder, conn, tools);
 		} catch(Exception e)
 		{
 			fail(e.getMessage());
 		}
 	}
-	
-	private void checkColumns(ColumnBuilder columnBuilder, Connection connection, UniqueNameTools tools) throws Exception  {
-		DatabaseMetaData meta = null;
-		ResultSet rsColumns = null;
+
+	private void checkinfo(Connection connection, UniqueNameTools tools) throws Exception {
+		DatabaseMetaData meta = connection.getMetaData();
+
+		displayResultSet("Table info", meta.getTables(tools.getCatalog(), tools.getSchema(), tools.getTable(), null));
+
+		displayResultSet("Pseudo columns", meta.getPseudoColumns(tools.getCatalog(), tools.getSchema(), tools.getTable(), null));
+
+		displayResultSet("Version columns", meta.getVersionColumns(tools.getCatalog(), tools.getSchema(), tools.getTable()));
+
+		displayResultSet("List Imported keys", meta.getImportedKeys(tools.getCatalog(), tools.getSchema(), tools.getTable()));
 		
-		 
-		List<Column> cols = new ArrayList<Column>();
+		displayResultSet("List Primary keys", meta.getPrimaryKeys(tools.getCatalog(), tools.getSchema(), tools.getTable()));
+
+		displayResultSet("List Exported keys", meta.getExportedKeys(tools.getCatalog(), tools.getSchema(), tools.getTable()));
+
+		displayResultSet("List columns for table", meta.getColumns(tools.getCatalog(), tools.getSchema(), tools.getTable(), null));
+		
+		displayResultSet("List index info", meta.getIndexInfo(tools.getCatalog(), tools.getSchema(), tools.getTable(), false,
+					true));
+	}
+
+	private void displayResultSet(String title, ResultSet rs) throws Exception {
 		try {
+
+			ResultSetMetaData rsMeta = rs.getMetaData();
+			StringBuilder builder = new StringBuilder();
 			
+			System.out.println(String.format("---> %s", title));
 			
-			 System.out.println("Create unique key list for [" + tools.getTable() + "]");
-			meta = connection.getMetaData();
-
-			rsColumns = meta.getColumns(tools.getCatalog(), tools.getSchema(), tools.getTable(), null);
-
-			while (rsColumns.next()) {
-				String columnName = rsColumns.getString("COLUMN_NAME");
-				int columnType = rsColumns.getInt("DATA_TYPE");
-				String typeName = rsColumns.getString("TYPE_NAME");
-				int size = rsColumns.getInt("COLUMN_SIZE");
-				int nullable = rsColumns.getInt("NULLABLE");
-				int scale = rsColumns.getInt("DECIMAL_DIGITS");
-
-				
-				Column column = columnBuilder.createColumn(columnName, columnType, typeName, size, size, scale);
-				
-				System.out.println(String.format("Column '%s' type '%d' type '%s' HANA Type '%s'", columnName, columnType, typeName, column.getDataType().name()));
-
-				
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new AdapterException(e);
-		} finally {
-			if (rsColumns != null) {
-				try {
-					rsColumns.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
+			boolean first = true;
+			for (int i = 1; i < rsMeta.getColumnCount(); i++) {
+				if(first)
+				{
+					first = false;
+				} else {
+					builder.append(";");
 				}
-				rsColumns = null;
+				
+				builder.append(rsMeta.getColumnName(i));
+					
 			}
+			
+			builder.append("\n");
+			
+			while (rs.next()) {
+
+				first = true;
+				for (int i = 1; i < rsMeta.getColumnCount(); i++) {
+					if(first)
+					{
+						first = false;
+					} else {
+						builder.append(";");
+					}
+					builder.append(rs.getString(rsMeta.getColumnName(i)));
+				}
+
+				builder.append("\n");
+				
+			}
+			System.out.println(builder.toString());
+			
+		} finally {
+			rs.close();
 		}
 
 	}
-	
-	
+
+
 	private void checkDriver(Connection conn) throws Exception {
 		StringBuilder builder = new StringBuilder("Driver result\n");
-		
+
 		DatabaseMetaData meta = conn.getMetaData();
-		
+
 		builder.append("\t- Driver: ").append(conn.getClientInfo().toString()).append("\n");
 		builder.append("\t- Database\n ");
 		builder.append("\t\t- Product name:").append(meta.getDatabaseProductName()).append("\n");
 		builder.append("\t\t- Product version:").append(meta.getDatabaseProductVersion()).append("\n");
 		builder.append("\t\t- Major version:").append(meta.getDatabaseMajorVersion()).append("\n");
 		builder.append("\t\t- Minor version:").append(meta.getDatabaseMinorVersion()).append("\n");
-		
+
 		System.out.println(builder.toString());
 	}
 

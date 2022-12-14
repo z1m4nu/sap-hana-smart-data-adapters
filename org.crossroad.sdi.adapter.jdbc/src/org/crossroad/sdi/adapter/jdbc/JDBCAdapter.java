@@ -3,8 +3,6 @@
  */
 package org.crossroad.sdi.adapter.jdbc;
 
-import java.util.HashMap;
-
 import org.crossroad.sdi.adapter.impl.AbstractJDBCAdapter;
 import org.crossroad.sdi.adapter.impl.AdapterConstants;
 import org.crossroad.sdi.adapter.impl.ClassUtil;
@@ -38,8 +36,6 @@ public class JDBCAdapter extends AbstractJDBCAdapter {
 	 * @see org.crossroad.sdi.adapter.impl.IJDBCAdapter#doCloseResultSet()
 	 */
 	public void doCloseResultSet() throws AdapterException {
-		// TODO Auto-generated method stub
-
 	}
 
 	/*
@@ -71,20 +67,6 @@ public class JDBCAdapter extends AbstractJDBCAdapter {
 		RemoteSourceDescription rs = new RemoteSourceDescription();
 		PropertyGroup mainGroup = RemoteSourceDescriptionFactory.getJDBCConnectionGroup();
 		mainGroup.setDisplayName("JDBC Server connection definition");
-
-/*
-		PropertyEntry entry = new PropertyEntry(AdapterConstants.KEY_JDBC_TYPE, "Database behavior",
-				"Select the database behavior");
-		HashMap<String, String> map = new HashMap<String, String>();
-		map.put("org.crossroad.sdi.adapter.db.jdbc.DBInfo", "Generic JDBC");
-		map.put("org.crossroad.sdi.adapter.db.mssql.DBInfo", "Microsoft SQL Server");
-		map.put("org.crossroad.sdi.adapter.db.mysql.DBInfo", "MySQL Server");
-
-		entry.setChoices(map);
-		entry.setDefaultValue(AdapterConstants.KEY_JDBC_TYPE_DEFAULT);
-
-		mainGroup.addProperty(entry);
-		*/
 
 		mainGroup.addProperty(new PropertyEntry(AdapterConstants.KEY_DATAMAPPING_FILE, "Custom mapping file", "Mapping file", false));
 		
