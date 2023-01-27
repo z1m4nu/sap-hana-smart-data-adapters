@@ -16,6 +16,7 @@ import com.sap.hana.dp.adapter.sdk.parser.ColumnReference;
 import com.sap.hana.dp.adapter.sdk.parser.Expression;
 import com.sap.hana.dp.adapter.sdk.parser.ExpressionBase;
 import com.sap.hana.dp.adapter.sdk.parser.TableReference;
+import com.sap.hana.dp.adapter.sdk.parser.ExpressionBase.Type;
 
 /**
  * @author e.soden
@@ -167,9 +168,10 @@ public class MSSQLRewriter extends JDBCSQLRewriter {
 	@Override
 	protected String castFunctionBuilder(Expression expr) throws AdapterException {
 		CONVERSION fx = CONVERSION.valueOf(expr.getValue());
-		if (CONVERSION.TO_DOUBLE.equals(fx) || CONVERSION.TO_BOOLEAN.equals(fx)) {
-			StringBuilder builder = new StringBuilder();
-
+		StringBuilder builder = new StringBuilder();
+		switch (fx) {
+		case TO_DOUBLE:
+		case TO_BOOLEAN:
 			builder.append("CAST(");
 			builder.append(expressionBuilder(expr.getOperands().get(0)));
 			builder.append(" AS ");
@@ -180,11 +182,15 @@ public class MSSQLRewriter extends JDBCSQLRewriter {
 				builder.append(" BIT");
 			}
 			builder.append(")");
+			break;
 
-			return builder.toString();
-		} else {
-			return super.castFunctionBuilder(expr);
+		default:
+			builder.append(super.castFunctionBuilder(expr));
+			break;
 		}
+		
+		return builder.toString();
+		
 	}
 
 	@Override

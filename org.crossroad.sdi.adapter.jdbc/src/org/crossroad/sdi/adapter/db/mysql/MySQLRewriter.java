@@ -18,7 +18,6 @@ import com.sap.hana.dp.adapter.sdk.parser.Expression;
  */
 public class MySQLRewriter extends JDBCSQLRewriter {
 
-
 	@Override
 	protected String aggregateFunctionBuilder(Expression expr) throws AdapterException {
 		StringBuilder builder = new StringBuilder();
@@ -92,7 +91,9 @@ public class MySQLRewriter extends JDBCSQLRewriter {
 		CONVERSION fx = CONVERSION.valueOf(expr.getValue());
 		String value = expressionBuilder(expr.getOperands().get(0));
 
-		if (CONVERSION.TO_BOOLEAN.equals(fx)) {
+		switch (fx) {
+
+		case TO_BOOLEAN:
 			builder.append("CAST(");
 			if (value.toLowerCase().contains("true") || value.toLowerCase().contains("false")) {
 				builder.append("(").append(value.toLowerCase()).append(" = 'true')");
@@ -101,22 +102,35 @@ public class MySQLRewriter extends JDBCSQLRewriter {
 				builder.append(value).append(" AS SIGNED");
 			}
 			builder.append(")");
-		} else if (CONVERSION.TO_DOUBLE.equals(fx)) {
+			break;
+		case TO_DOUBLE:
+			builder.append("CAST(");
+			builder.append(value);
+			builder.append(" AS DOUBLE PRECISION)");
+			break;
+		case TO_BIGINT:
+		case TO_INT:
+		case TO_INTEGER:
+		case TO_TINYINT:
+		case TO_SMALLINT:
+			builder.append("CAST(");
+			builder.append(value);
+			builder.append(" AS  SIGNED INTEGER)");
+			break;
+		case TO_VARCHAR:
 			builder.append("CAST(");
 			builder.append(value);
 			builder.append(" AS ");
-
-			builder.append("DOUBLE PRECISION");
-			builder.append(")");
-		} else if (CONVERSION.TO_BIGINT.equals(fx) || CONVERSION.TO_INTEGER.equals(fx) || CONVERSION.TO_INT.equals(fx)
-				|| CONVERSION.TO_SMALLINT.equals(fx) || CONVERSION.TO_TINYINT.equals(fx)) {
+			builder.append("CHAR)");
+			break;
+		case TO_NVARCHAR:
 			builder.append("CAST(");
 			builder.append(value);
-			builder.append(" AS ");
-			builder.append("SIGNED INTEGER");
-			builder.append(")");
-		} else {
+			builder.append(" AS NCHAR)");
+			break;
+		default:
 			builder.append(super.castFunctionBuilder(expr));
+			break;
 		}
 
 		return builder.toString();

@@ -287,19 +287,14 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 		 * 
 		 */
 		try {
-
 			onClose();
-			/*
-			 * Close resultSet
-			 */
-			closeLocalResultSet();
 
-			closeLocalBrowseResultSet();
-
-			closeLocalStatement();
-
-			closeLocalConnection();
-
+			if (connection != null) {
+				logger.debug("Closing Connection....");
+				connection.close();
+			}
+		} catch (Exception e) {
+			throw new AdapterException(e);
 		} finally {
 			resultSet = null;
 			browseResultSet = null;
@@ -307,63 +302,6 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 
 			blobHandle.clear();
 			clobHandle.clear();
-		}
-	}
-
-	/**
-	 * 
-	 */
-	protected void closeLocalResultSet() {
-		if (resultSet != null) {
-			logger.debug("Closing resultset....");
-			try {
-				resultSet.close();
-			} catch (SQLException e) {
-				logger.warn("Issues when closing resultSet", e);
-			} finally {
-				resultSet = null;
-			}
-		}
-	}
-
-	protected void closeLocalBrowseResultSet() {
-		if (browseResultSet != null) {
-			logger.debug("Closing browse resultset....");
-			try {
-				browseResultSet.close();
-			} catch (SQLException e) {
-				logger.warn("Issues when closing browseResultSet", e);
-			} finally {
-				browseResultSet = null;
-			}
-		}
-	}
-
-	protected void closeLocalStatement() {
-
-		if (stmt != null) {
-			logger.debug("Closing Statement....");
-			try {
-				stmt.close();
-			} catch (SQLException e) {
-				logger.warn("Issues when closing browseResultSet", e);
-			} finally {
-				stmt = null;
-			}
-		}
-	}
-
-	private void closeLocalConnection() {
-
-		if (connection != null) {
-			logger.debug("Closing Connection....");
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				logger.warn("Issues when closing connection", e);
-			} finally {
-				connection = null;
-			}
 		}
 	}
 
@@ -378,35 +316,36 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	 */
 	@Override
 	public void getNext(AdapterRowSet rowList) throws AdapterException {
-		logger.debug("Function - ");
+		logger.debug("Function - getNext");
 		try {
 			// blobHandle.clear();
 			/*
 			 * This method will be called multiple times based on what you return. Make sure
 			 * you honor the fetchSize requirement by only sending that many rows.
 			 */
-			int rowNum = 0;
-			while (resultSet.next()) {
-				/*
-				 * For each row in resultSet, create a AdapterRow Set the values for each
-				 * columns
-				 */
-				rowList.newRow();
-				List<Column> columns = rowList.getColumns();
-				for (int i = 0; i < columns.size(); i++) {
-					// Always add to last row
-					setValue(rowList.getRow(rowList.getRowCount() - 1), columns.get(i), resultSet, i, rowNum);
-					/**
-					 * Note in case of lob datatypes, if you put lob columns here let's say you send
-					 * 10 rows with lob id inside. Framework will call getLob to get all the lob
-					 * data before fetching the next batch of rows using getNext.
+			if (resultSet != null) {
+				int rowNum = 0;
+				while (resultSet.next()) {
+					/*
+					 * For each row in resultSet, create a AdapterRow Set the values for each
+					 * columns
 					 */
+					rowList.newRow();
+					List<Column> columns = rowList.getColumns();
+					for (int i = 0; i < columns.size(); i++) {
+						// Always add to last row
+						setValue(rowList.getRow(rowList.getRowCount() - 1), columns.get(i), resultSet, i, rowNum);
+						/**
+						 * Note in case of lob datatypes, if you put lob columns here let's say you send
+						 * 10 rows with lob id inside. Framework will call getLob to get all the lob
+						 * data before fetching the next batch of rows using getNext.
+						 */
+					}
+					rowNum++;
+					if (rowNum == fetchSize) // Do not add more than fetchSize.
+						break;
 				}
-				rowNum++;
-				if (rowNum == fetchSize) // Do not add more than fetchSize.
-					break;
 			}
-
 		} catch (SQLException e) {
 			throw new AdapterException(e);
 		}
@@ -452,7 +391,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 		this.nodeID = nodeId;
 		browseOffset = 0;
 
-		closeLocalBrowseResultSet();
+		doCloseResultSet();
 	}
 
 	/**
@@ -830,6 +769,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			this.connection.setAutoCommit(false);
 			this.pstmt = this.connection.prepareStatement(pstmtStr);
 			executeSelectStatement(this.pstmt, info);
+
 		} catch (SQLException e) {
 			logger.error("Error while executing statement", e);
 		}
@@ -942,8 +882,52 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 	 * @see org.crossroad.sdi.adapter.impl.IJDBCAdapter#onClose()
 	 */
 	public void onClose() {
-		logger.debug("Closing Preparestatement object");
+		logger.debug("Function - onClose");
+		try {
+			doCloseResultSet();
+		} catch (AdapterException e) {
+			logger.error("Error while closing", e);
+		}
+	}
+
+	@Override
+	public void doCloseResultSet() throws AdapterException {
+		logger.debug("Function - doCloseResultSet");
+		if (resultSet != null) {
+			logger.debug("Closing resultset....");
+			try {
+				resultSet.close();
+			} catch (SQLException e) {
+				logger.warn("Issues when closing resultSet", e);
+			} finally {
+				resultSet = null;
+			}
+		}
+
+		if (browseResultSet != null) {
+			logger.debug("Closing browse resultset....");
+			try {
+				browseResultSet.close();
+			} catch (SQLException e) {
+				logger.warn("Issues when closing browseResultSet", e);
+			} finally {
+				browseResultSet = null;
+			}
+		}
+
+		if (stmt != null) {
+			logger.debug("Closing Statement....");
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				logger.warn("Issues when closing browseResultSet", e);
+			} finally {
+				stmt = null;
+			}
+		}
+
 		if (this.pstmt != null) {
+			logger.debug("Closing Preparestatement...");
 			try {
 				this.pstmt.close();
 			} catch (SQLException e) {
@@ -951,6 +935,7 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 			}
 			this.pstmt = null;
 		}
+
 	}
 
 	@Override
@@ -996,13 +981,13 @@ public abstract class AbstractJDBCAdapter extends Adapter implements IJDBCAdapte
 
 	@Override
 	public DataDictionary loadColumnsDictionary() {
-		logger.debug("Function - loadColumnsDictionary()");
+		logger.debug("Function - loadColumnsDictionary");
 		return null;
 	}
 
 	@Override
 	public void closeResultSet() throws AdapterException {
-		logger.debug("Ask to close resulSet");
+		logger.debug("Function - closeResultSet");
 
 		doCloseResultSet();
 	}

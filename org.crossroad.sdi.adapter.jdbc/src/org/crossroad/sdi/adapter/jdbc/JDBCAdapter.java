@@ -30,23 +30,6 @@ public class JDBCAdapter extends AbstractJDBCAdapter {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.crossroad.sdi.adapter.impl.IJDBCAdapter#doCloseResultSet()
-	 */
-	public void doCloseResultSet() throws AdapterException {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.crossroad.sdi.adapter.impl.IJDBCAdapter#onClose()
-	 */
-	public void onClose() {
-		logger.info("Closing local data");
-
-	}
 
 	/*
 	 * (non-Javadoc)

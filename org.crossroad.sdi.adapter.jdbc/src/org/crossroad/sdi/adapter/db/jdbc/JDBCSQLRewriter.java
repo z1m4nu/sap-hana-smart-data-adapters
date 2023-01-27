@@ -17,6 +17,7 @@ import org.crossroad.sdi.adapter.utils.StringUtils;
 import com.sap.hana.dp.adapter.sdk.AdapterException;
 import com.sap.hana.dp.adapter.sdk.parser.Expression;
 import com.sap.hana.dp.adapter.sdk.parser.ExpressionBase;
+import com.sap.hana.dp.adapter.sdk.parser.ExpressionBase.Type;
 
 /**
  * @author e.soden
@@ -28,32 +29,39 @@ public class JDBCSQLRewriter extends AbstractSQLRewriter {
 	protected String castFunctionBuilder(Expression expr) throws AdapterException {
 		StringBuilder builder = new StringBuilder();
 		CONVERSION fx = CONVERSION.valueOf(expr.getValue());
-		builder.append("CAST(");
-		builder.append(expressionBuilder(expr.getOperands().get(0)));
-		builder.append(" AS ");
 		
+		String value = expressionBuilder(expr.getOperands().get(0));
+		
+		builder.append("CAST(").append(value);
+		
+		switch (fx) {
+		case TO_DOUBLE:
+			builder.append(" AS DECIMAL");
+			break;
 
-		if (CONVERSION.TO_DOUBLE.equals(fx)) {
-			builder.append("DECIMAL");
-		} else if (CONVERSION.TO_DECIMAL.equals(fx)) {
-			List<ExpressionBase> params = expr.getOperands();
-			if (params.size() < 3) {
-				builder.append("CAST(");
-				builder.append(expressionBuilder(expr.getOperands().get(0)));
-				builder.append(" AS DECIMAL");
+		case TO_DECIMAL:
+			builder.append(" AS DECIMAL");
+
+			if (expr.getOperands().size() > 1) {
+				ExpressionBase exprLen = expr.getOperands().get(1);
+						
+				if (exprLen.getType() == Type.INT_LITERAL) {
+					builder.append("(").append(((Expression) exprLen).getValue());
+				}
+				
+				if (expr.getOperands().size() == 3) {
+					ExpressionBase exprDec = expr.getOperands().get(2);
+					if (exprDec.getType() == Type.INT_LITERAL) {
+						builder.append(",").append(((Expression) exprDec).getValue());
+					}
+				}
+				
 				builder.append(")");
-			} else {
-				builder.append("CAST(");
-				builder.append(expressionBuilder(expr.getOperands().get(0)));
-				builder.append(" AS DECIMAL(");
-				builder.append(expressionBuilder(expr.getOperands().get(1)));
-				builder.append(",");
-				builder.append(expressionBuilder(expr.getOperands().get(2)));
-				builder.append(")");
-				builder.append(")");
-			}
-		} else {
-			builder.append(fx.name().substring(fx.name().indexOf('_')+1));
+			} 
+			break;
+		default:
+			builder.append(" AS ").append(fx.name().substring(fx.name().indexOf('_')+1));
+			break;
 		}
 		builder.append(")");
 

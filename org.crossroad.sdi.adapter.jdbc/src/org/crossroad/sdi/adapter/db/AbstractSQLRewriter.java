@@ -13,7 +13,13 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.crossroad.sdi.adapter.impl.ISQLRewriter;
 import org.crossroad.sdi.adapter.impl.UniqueNameTools;
+import org.crossroad.sdi.adapter.impl.functions.AGGREGATE;
+import org.crossroad.sdi.adapter.impl.functions.CONVERSION;
 import org.crossroad.sdi.adapter.impl.functions.FunctionUtils;
+import org.crossroad.sdi.adapter.impl.functions.MISC;
+import org.crossroad.sdi.adapter.impl.functions.NUMERIC;
+import org.crossroad.sdi.adapter.impl.functions.STRING;
+import org.crossroad.sdi.adapter.impl.functions.TIME;
 import org.crossroad.sdi.adapter.utils.StringUtils;
 
 import com.sap.hana.dp.adapter.sdk.AdapterException;
@@ -722,8 +728,9 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		}
 		String newAlias = (String) this.aliasMap.get(alias);
 		if (newAlias == null) {
+			alias = alias.replace("\"", "");
 			newAlias = alias;
-			// alias.replace("\"", "");// String.valueOf(this.aliasSeed++);
+			
 			this.aliasMap.put(alias, newAlias);
 		}
 		return newAlias;
@@ -795,7 +802,14 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 		if ("*".equalsIgnoreCase(colRef.getColumnName())) {
 			str.append("*");
 		} else {
-			str.append(colRef.getColumnName().replace("\"", ""));
+//			if(colRef.getColumnName().startsWith("\"") && colRef.getColumnName().endsWith("\""))
+//			{
+//				str.append(colRef.getColumnName());	
+//			} else {
+//				str.append("\"").append(colRef.getColumnName()).append("\"");
+//			}
+			str.append(colRef.getColumnName().replace("\"", ""));	
+			
 		}
 
 		/*
@@ -966,7 +980,7 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 	/**
-	 * 
+	 * Main method to build SQL function
 	 * @param expr
 	 * @return
 	 * @throws AdapterException
@@ -994,18 +1008,60 @@ public abstract class AbstractSQLRewriter implements ISQLRewriter {
 	}
 
 
+	/**
+	 * Used to build {@link NUMERIC} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String numericFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * Used to build {@link AGGREGATE} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String aggregateFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * Used to build {@link MISC} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String miscFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * Used to build TRIM() functions which is also used in {@value expressionBuilder} method
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String trimFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * Used to configure {@link STRING} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String stringFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * USed to configure {@link CONVERSION} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String castFunctionBuilder(Expression expr) throws AdapterException;
 
+	/**
+	 * Used to configure {@link TIME} functions
+	 * @param expr
+	 * @return
+	 * @throws AdapterException
+	 */
 	protected abstract String timeFunctionBuilder(Expression expr) throws AdapterException;
 
 	
